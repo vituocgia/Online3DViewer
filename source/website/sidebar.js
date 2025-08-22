@@ -62,6 +62,9 @@ export class Sidebar
             },
             onEdgeDisplayChanged : () => {
                 this.callbacks.onEdgeDisplayChanged ();
+            },
+            onHighlightColorChanged : () => {
+                this.callbacks.onHighlightColorChanged ();
             }
         });
     }
@@ -102,8 +105,18 @@ export class Sidebar
         this.detailsPanel.AddObject3DProperties (model, object3D);
     }
 
+    AddMultipleObject3DProperties (model, object3Ds)
+    {
+        this.detailsPanel.AddMultipleObject3DProperties (model, object3Ds);
+    }
+
     AddMaterialProperties (material)
     {
         this.detailsPanel.AddMaterialProperties (material);
+    }
+
+    AddMultipleMaterialProperties (materials)
+    {
+        this.detailsPanel.AddMultipleMaterialProperties (materials);
     }
 }

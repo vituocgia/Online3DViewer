@@ -14,8 +14,16 @@ export class MaterialItem extends TreeViewSingleItem
     constructor (name, materialIndex, callbacks)
     {
         super (name);
-        this.OnClick (() => {
-            callbacks.onSelected (materialIndex);
+        this.materialIndex = materialIndex;
+        this.callbacks = callbacks;
+        this.OnClick ((event) => {
+            if (event.ctrlKey || event.metaKey) {
+                // Ctrl+Click for multiple selection
+                this.callbacks.onMaterialToggleSelection(materialIndex);
+            } else {
+                // Single click for single selection
+                this.callbacks.onMaterialSelected(materialIndex);
+            }
         });
     }
 }
@@ -28,6 +36,7 @@ export class MeshItem extends TreeViewButtonItem
 
         this.meshInstanceId = meshInstanceId;
         this.visible = true;
+        this.callbacks = callbacks;
 
         this.fitToWindowButton = new TreeViewButton ('fit');
         this.fitToWindowButton.OnClick (() => {
@@ -41,8 +50,14 @@ export class MeshItem extends TreeViewButtonItem
         });
         this.AppendButton (this.showHideButton);
 
-        this.OnClick (() => {
-            callbacks.onSelected (this.meshInstanceId);
+        this.OnClick ((event) => {
+            if (event.ctrlKey || event.metaKey) {
+                // Ctrl+Click for multiple selection
+                this.callbacks.onMeshToggleSelection(this.meshInstanceId);
+            } else {
+                // Single click for single selection
+                this.callbacks.onMeshSelected(this.meshInstanceId);
+            }
         });
     }
 

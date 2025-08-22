@@ -11,6 +11,8 @@ import { MaterialSource, MaterialType } from '../engine/model/material.js';
 import { RGBColorToHexString } from '../engine/model/color.js';
 import { Unit } from '../engine/model/unit.js';
 import { Loc } from '../engine/core/localization.js';
+import { Coord3D } from '../engine/geometry/coord3d.js';
+import { PropertyGroup } from '../engine/model/property.js';
 
 function UnitToString (unit)
 {
@@ -93,6 +95,60 @@ export class SidebarDetailsPanel extends SidebarPanel
         this.Resize ();
     }
 
+    AddMultipleObject3DProperties (model, object3Ds)
+    {
+        this.Clear ();
+        let table = AddDiv (this.contentDiv, 'ov_property_table');
+
+        // Add selection count
+        this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Selected Objects'), object3Ds.length));
+
+        // Calculate combined properties
+        let totalVertices = 0;
+        let totalLines = 0;
+        let totalTriangles = 0;
+        let combinedBoundingBox = null;
+
+        for (let object3D of object3Ds) {
+            totalVertices += object3D.VertexCount();
+            totalLines += object3D.LineSegmentCount();
+            totalTriangles += object3D.TriangleCount();
+
+            let boundingBox = GetBoundingBox(object3D);
+            if (combinedBoundingBox === null) {
+                combinedBoundingBox = boundingBox;
+            } else {
+                combinedBoundingBox.min.x = Math.min(combinedBoundingBox.min.x, boundingBox.min.x);
+                combinedBoundingBox.min.y = Math.min(combinedBoundingBox.min.y, boundingBox.min.y);
+                combinedBoundingBox.min.z = Math.min(combinedBoundingBox.min.z, boundingBox.min.z);
+                combinedBoundingBox.max.x = Math.max(combinedBoundingBox.max.x, boundingBox.max.x);
+                combinedBoundingBox.max.y = Math.max(combinedBoundingBox.max.y, boundingBox.max.y);
+                combinedBoundingBox.max.z = Math.max(combinedBoundingBox.max.z, boundingBox.max.z);
+            }
+        }
+
+        let unit = model.GetUnit();
+        this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Total Vertices'), totalVertices));
+        if (totalLines > 0) {
+            this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Total Lines'), totalLines));
+        }
+        if (totalTriangles > 0) {
+            this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Total Triangles'), totalTriangles));
+        }
+
+        if (combinedBoundingBox !== null) {
+            let size = SubCoord3D (combinedBoundingBox.max, combinedBoundingBox.min);
+            if (unit !== Unit.Unknown) {
+                this.AddProperty (table, new Property (PropertyType.Text, Loc ('Unit'), UnitToString (unit)));
+            }
+            this.AddProperty (table, new Property (PropertyType.Number, Loc ('Combined Size X'), size.x));
+            this.AddProperty (table, new Property (PropertyType.Number, Loc ('Combined Size Y'), size.y));
+            this.AddProperty (table, new Property (PropertyType.Number, Loc ('Combined Size Z'), size.z));
+        }
+
+        this.Resize ();
+    }
+
     AddMaterialProperties (material)
     {
         function AddTextureMap (obj, table, name, map)
@@ -128,16 +184,61 @@ export class SidebarDetailsPanel extends SidebarPanel
             this.AddProperty (table, new Property (PropertyType.Percent, Loc ('Metalness'), material.metalness));
             this.AddProperty (table, new Property (PropertyType.Percent, Loc ('Roughness'), material.roughness));
         }
-        this.AddProperty (table, new Property (PropertyType.Percent, Loc ('Opacity'), material.opacity));
-        AddTextureMap (this, table, Loc ('Diffuse Map'), material.diffuseMap);
-        AddTextureMap (this, table, Loc ('Bump Map'), material.bumpMap);
-        AddTextureMap (this, table, Loc ('Normal Map'), material.normalMap);
-        AddTextureMap (this, table, Loc ('Emissive Map'), material.emissiveMap);
-        if (material.type === MaterialType.Phong) {
-            AddTextureMap (this, table, Loc ('Specular Map'), material.specularMap);
-        } else if (material.type === MaterialType.Physical) {
-            AddTextureMap (this, table, Loc ('Metallic Map'), material.metalnessMap);
+        if (material.opacity !== undefined && material.opacity < 1.0) {
+            this.AddProperty (table, new Property (PropertyType.Percent, Loc ('Opacity'), material.opacity * 100.0));
         }
+        if (material.transparent) {
+            this.AddProperty (table, new Property (PropertyType.Text, Loc ('Transparency'), Loc ('Yes')));
+        }
+        if (material.textures !== null) {
+            let textureTable = AddDiv (this.contentDiv, 'ov_property_table ov_property_table_custom');
+            this.AddPropertyGroup (textureTable, new PropertyGroup (Loc ('Textures')));
+            for (let textureName in material.textures) {
+                if (Object.prototype.hasOwnProperty.call (material.textures, textureName)) {
+                    let texture = material.textures[textureName];
+                    AddTextureMap (this, textureTable, textureName, texture);
+                }
+            }
+        }
+        this.Resize ();
+    }
+
+    AddMultipleMaterialProperties (materials)
+    {
+        this.Clear ();
+        let table = AddDiv (this.contentDiv, 'ov_property_table');
+
+        // Add selection count
+        this.AddProperty (table, new Property (PropertyType.Integer, Loc ('Selected Materials'), materials.length));
+
+        // Show common properties
+        let hasVertexColors = materials.some(m => m.vertexColors);
+        let hasTransparency = materials.some(m => m.transparent);
+        let hasTextures = materials.some(m => m.textures !== null);
+
+        if (hasVertexColors) {
+            this.AddProperty (table, new Property (PropertyType.Text, Loc ('Vertex Colors'), Loc ('Mixed')));
+        }
+        if (hasTransparency) {
+            this.AddProperty (table, new Property (PropertyType.Text, Loc ('Transparency'), Loc ('Mixed')));
+        }
+        if (hasTextures) {
+            this.AddProperty (table, new Property (PropertyType.Text, Loc ('Textures'), Loc ('Mixed')));
+        }
+
+        // Show material types
+        let materialTypes = new Set();
+        for (let material of materials) {
+            if (material.type === MaterialType.Phong) {
+                materialTypes.add(Loc('Phong'));
+            } else if (material.type === MaterialType.Physical) {
+                materialTypes.add(Loc('Physical'));
+            }
+        }
+        if (materialTypes.size > 0) {
+            this.AddProperty (table, new Property (PropertyType.Text, Loc ('Types'), Array.from(materialTypes).join(', ')));
+        }
+
         this.Resize ();
     }
 

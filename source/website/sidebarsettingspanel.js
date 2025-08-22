@@ -34,7 +34,7 @@ function AddColorPicker (parentDiv, opacity, defaultColor, predefinedColors, onC
                 cmyk : false,
                 input : true,
                 clear : false,
-                save : false
+                save : true
             }
         }
     });
@@ -212,6 +212,8 @@ class SettingsModelDisplaySection extends SettingsSection
         this.thresholdSlider = null;
         this.thresholdSliderValue = null;
         this.edgeSettingsDiv = null;
+
+        this.highlightColorPicker = null;
     }
 
     Init (callbacks)
@@ -300,6 +302,19 @@ class SettingsModelDisplaySection extends SettingsSection
 
         this.edgeDisplayToggle.SetStatus (this.settings.edgeSettings.showEdges);
         ShowDomElement (this.edgeSettingsDiv, this.settings.edgeSettings.showEdges);
+
+        // Highlight Color Picker
+        let highlightColorDiv = AddDiv (this.contentDiv, 'ov_sidebar_parameter');
+        let highlightColorRow = AddDiv (highlightColorDiv, 'ov_sidebar_settings_row');
+        let predefinedHighlightColors = ['#6496ff', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
+        let defaultHighlightColor = '#' + RGBAColorToHexString (this.settings.highlightColor || new RGBAColor (100, 150, 255, 200));
+
+        let highlightColorInput = AddDiv (highlightColorRow, 'ov_color_picker');
+        this.highlightColorPicker = AddColorPicker (highlightColorInput, true, defaultHighlightColor, predefinedHighlightColors, (r, g, b, a) => {
+            this.settings.highlightColor = new RGBAColor (r, g, b, a);
+            this.callbacks.onHighlightColorChanged ();
+        });
+        AddDiv (highlightColorRow, null, Loc ('Selection Highlight Color'));
     }
 
     UpdateEnvironmentMap ()
@@ -341,6 +356,10 @@ class SettingsModelDisplaySection extends SettingsSection
             this.thresholdSlider.value = this.settings.edgeSettings.edgeThreshold;
             this.thresholdSliderValue.innerHTML = this.settings.edgeSettings.edgeThreshold;
         }
+
+        if (this.highlightColorPicker !== null) {
+            this.highlightColorPicker.setColor ('#' + RGBAColorToHexString (this.settings.highlightColor || new RGBAColor (100, 150, 255, 200)));
+        }
     }
 
     UpdateVisibility ()
@@ -368,6 +387,10 @@ class SettingsModelDisplaySection extends SettingsSection
 
         if (this.edgeColorPicker !== null) {
             this.edgeColorPicker.hide ();
+        }
+
+        if (this.highlightColorPicker !== null) {
+            this.highlightColorPicker.hide ();
         }
     }
 }
@@ -510,6 +533,9 @@ export class SidebarSettingsPanel extends SidebarPanel
             },
             onEdgeThresholdChange : () => {
                 this.callbacks.onEdgeDisplayChanged ();
+            },
+            onHighlightColorChanged : () => {
+                this.callbacks.onHighlightColorChanged ();
             }
         });
         this.importParametersSection.Init ({
@@ -545,6 +571,7 @@ export class SidebarSettingsPanel extends SidebarPanel
         this.settings.defaultLineColor = defaultSettings.defaultLineColor;
         this.settings.defaultColor = defaultSettings.defaultColor;
         this.settings.edgeSettings = defaultSettings.edgeSettings;
+        this.settings.highlightColor = defaultSettings.highlightColor;
         this.settings.themeId = defaultSettings.themeId;
         this.UpdateControlsStatus ();
         this.callbacks.onEnvironmentMapChanged ();

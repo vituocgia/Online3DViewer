@@ -37,6 +37,72 @@ export class Selection
     }
 }
 
+export class MultipleSelection
+{
+    constructor ()
+    {
+        this.selections = new Map(); // Map<SelectionType, Set<data>>
+        this.selections.set(SelectionType.Material, new Set());
+        this.selections.set(SelectionType.Mesh, new Map()); // Use Map with GetKey() for MeshInstanceId
+    }
+
+    AddSelection (selection)
+    {
+        if (selection.type === SelectionType.Material) {
+            this.selections.get(SelectionType.Material).add(selection.materialIndex);
+        } else if (selection.type === SelectionType.Mesh) {
+            this.selections.get(SelectionType.Mesh).set(selection.meshInstanceId.GetKey(), selection.meshInstanceId);
+        }
+    }
+
+    RemoveSelection (selection)
+    {
+        if (selection.type === SelectionType.Material) {
+            this.selections.get(SelectionType.Material).delete(selection.materialIndex);
+        } else if (selection.type === SelectionType.Mesh) {
+            this.selections.get(SelectionType.Mesh).delete(selection.meshInstanceId.GetKey());
+        }
+    }
+
+    HasSelection (selection)
+    {
+        if (selection.type === SelectionType.Material) {
+            return this.selections.get(SelectionType.Material).has(selection.materialIndex);
+        } else if (selection.type === SelectionType.Mesh) {
+            return this.selections.get(SelectionType.Mesh).has(selection.meshInstanceId.GetKey());
+        }
+        return false;
+    }
+
+    GetMaterialSelections ()
+    {
+        return Array.from(this.selections.get(SelectionType.Material));
+    }
+
+    GetMeshSelections ()
+    {
+        return Array.from(this.selections.get(SelectionType.Mesh).values());
+    }
+
+    Clear ()
+    {
+        this.selections.get(SelectionType.Material).clear();
+        this.selections.get(SelectionType.Mesh).clear();
+    }
+
+    IsEmpty ()
+    {
+        return this.selections.get(SelectionType.Material).size === 0 &&
+               this.selections.get(SelectionType.Mesh).size === 0;
+    }
+
+    GetCount ()
+    {
+        return this.selections.get(SelectionType.Material).size +
+               this.selections.get(SelectionType.Mesh).size;
+    }
+}
+
 export class Navigator
 {
     constructor (mainDiv)
@@ -45,7 +111,7 @@ export class Navigator
 
         this.panelSet = new PanelSet (mainDiv);
         this.callbacks = null;
-        this.selection = null;
+        this.selection = new MultipleSelection();
         this.tempSelectedMeshId = null;
 
         this.filesPanel = new NavigatorFilesPanel (this.panelSet.GetContentDiv ());
@@ -91,6 +157,9 @@ export class Navigator
             onMaterialSelected : (materialIndex) => {
                 this.SetSelection (new Selection (SelectionType.Material, materialIndex));
             },
+            onMaterialToggleSelection : (materialIndex) => {
+                this.ToggleSelection (new Selection (SelectionType.Material, materialIndex));
+            },
             onMeshTemporarySelected : (meshInstanceId) => {
                 this.tempSelectedMeshId = meshInstanceId;
                 this.callbacks.onMeshSelectionChanged ();
@@ -104,10 +173,13 @@ export class Navigator
             onMeshSelected : (meshId) => {
                 this.SetSelection (new Selection (SelectionType.Mesh, meshId));
             },
+            onMeshToggleSelection : (meshId) => {
+                this.ToggleSelection (new Selection (SelectionType.Mesh, meshId));
+            },
             onMeshShowHide : (meshId) => {
                 this.ToggleMeshVisibility (meshId);
             },
-            onMeshFitToWindow : (meshId) => {
+            onFitToWindow : (meshId) => {
                 this.FitMeshToWindow (meshId);
             },
             onNodeShowHide : (nodeId) => {
@@ -198,69 +270,102 @@ export class Navigator
         this.callbacks.onMeshVisibilityChanged ();
     }
 
-    GetSelectedMeshId ()
+    GetSelectedMeshIds ()
     {
         if (this.tempSelectedMeshId !== null) {
-            return this.tempSelectedMeshId;
+            return [this.tempSelectedMeshId];
         }
-        if (this.selection === null || this.selection.type !== SelectionType.Mesh) {
-            return null;
+        return this.selection.GetMeshSelections();
+    }
+
+    GetSelectedMaterialIndices ()
+    {
+        return this.selection.GetMaterialSelections();
+    }
+
+    AddToSelection (selection)
+    {
+        this.selection.AddSelection(selection);
+        this.UpdateSelectionUI();
+        this.OnSelectionChanged();
+    }
+
+    RemoveFromSelection (selection)
+    {
+        this.selection.RemoveSelection(selection);
+        this.UpdateSelectionUI();
+        this.OnSelectionChanged();
+    }
+
+    ToggleSelection (selection)
+    {
+        if (this.selection.HasSelection(selection)) {
+            this.RemoveFromSelection(selection);
+        } else {
+            this.AddToSelection(selection);
         }
-        return this.selection.meshInstanceId;
     }
 
     SetSelection (selection)
     {
-        function SetEntitySelection (navigator, selection, select)
-        {
-            if (selection.type === SelectionType.Material) {
-                if (select && navigator.panelSet.IsPanelsVisible ()) {
-                    navigator.panelSet.ShowPanel (navigator.materialsPanel);
+        // For backward compatibility, clear and set single selection
+        this.selection.Clear();
+        if (selection !== null) {
+            this.selection.AddSelection(selection);
+        }
+        this.UpdateSelectionUI();
+        this.OnSelectionChanged();
+    }
+
+    UpdateSelectionUI ()
+    {
+        // Update material panel selections
+        this.materialsPanel.ClearSelections();
+        let materialSelections = this.selection.GetMaterialSelections();
+        for (let materialIndex of materialSelections) {
+            let materialItem = this.materialsPanel.GetMaterialItem(materialIndex);
+            if (materialItem) {
+                if (materialSelections.length > 1) {
+                    materialItem.SetMultiSelected(true);
+                } else {
+                    materialItem.SetSelected(true);
                 }
-                navigator.materialsPanel.SelectMaterialItem (selection.materialIndex, select);
-            } else if (selection.type === SelectionType.Mesh) {
-                if (select && navigator.panelSet.IsPanelsVisible ()) {
-                    navigator.panelSet.ShowPanel (navigator.meshesPanel);
-                }
-                navigator.meshesPanel.GetMeshItem (selection.meshInstanceId).SetSelected (select);
             }
         }
 
-        function SetCurrentSelection (navigator, selection)
-        {
-            navigator.selection = selection;
-            navigator.OnSelectionChanged ();
-        }
-
-        let oldSelection = this.selection;
-        if (oldSelection !== null) {
-            SetEntitySelection (this, oldSelection, false);
-        }
-
-        SetCurrentSelection (this, selection);
-        this.tempSelectedMeshId = null;
-
-        if (this.selection !== null) {
-            if (oldSelection !== null && oldSelection.IsEqual (this.selection)) {
-                SetEntitySelection (this, this.selection, false);
-                SetCurrentSelection (this, null);
-            } else {
-                SetEntitySelection (this, this.selection, true);
+        // Update meshes panel selections
+        this.meshesPanel.ClearSelections();
+        let meshSelections = this.selection.GetMeshSelections();
+        for (let meshInstanceId of meshSelections) {
+            let meshItem = this.meshesPanel.GetMeshItem(meshInstanceId);
+            if (meshItem) {
+                if (meshSelections.length > 1) {
+                    meshItem.SetMultiSelected(true);
+                } else {
+                    meshItem.SetSelected(true);
+                }
             }
         }
-
-        this.callbacks.onMeshSelectionChanged ();
     }
 
     OnSelectionChanged ()
     {
-        if (this.selection === null) {
+        if (this.selection.IsEmpty()) {
             this.callbacks.onSelectionCleared ();
         } else {
-            if (this.selection.type === SelectionType.Material) {
-                this.callbacks.onMaterialSelected (this.selection.materialIndex);
-            } else if (this.selection.type === SelectionType.Mesh) {
-                this.callbacks.onMeshSelected (this.selection.meshInstanceId);
+            // Only call the appropriate callback based on what's selected
+            let materialSelections = this.selection.GetMaterialSelections();
+            let meshSelections = this.selection.GetMeshSelections();
+
+            if (materialSelections.length > 0 && meshSelections.length === 0) {
+                // Only materials selected
+                this.callbacks.onMaterialSelectionChanged ();
+            } else if (meshSelections.length > 0 && materialSelections.length === 0) {
+                // Only meshes selected
+                this.callbacks.onMeshSelectionChanged ();
+            } else if (meshSelections.length > 0 && materialSelections.length > 0) {
+                // Both materials and meshes selected - prioritize meshes
+                this.callbacks.onMeshSelectionChanged ();
             }
         }
         this.UpdatePanels ();
@@ -270,11 +375,15 @@ export class Navigator
     {
         let materialIndex = null;
         let meshInstanceId = null;
-        if (this.selection !== null) {
-            if (this.selection.type === SelectionType.Material) {
-                materialIndex = this.selection.materialIndex;
-            } else if (this.selection.type === SelectionType.Mesh) {
-                meshInstanceId = this.selection.meshInstanceId;
+        if (this.selection.IsEmpty()) {
+            materialIndex = null;
+            meshInstanceId = null;
+        } else {
+            if (this.selection.GetMaterialSelections().length > 0) {
+                materialIndex = this.selection.GetMaterialSelections()[0];
+            }
+            if (this.selection.GetMeshSelections().length > 0) {
+                meshInstanceId = this.selection.GetMeshSelections()[0];
             }
         }
 
@@ -303,6 +412,6 @@ export class Navigator
     Clear ()
     {
         this.panelSet.Clear ();
-        this.selection = null;
+        this.selection.Clear();
     }
 }

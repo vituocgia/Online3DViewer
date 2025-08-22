@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+	<link rel="icon" type="image/png" href="static/3dviewer_net_favicon.ico">
+
+	<title>Online 3D Viewer - New Features</title>
+
+	<link rel="stylesheet" href="static/highlightjs/styles/github.min.css"/>
+	<script src="static/highlightjs/highlight.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="static/style.css"/>
+	<script type="text/javascript" src="static/script.js"></script>
+</head>
+
+<body>
+<div id="navigation_toggle" class="navigation_toggle"><img id="navigation_icon" src="static/menu.svg"/></div>
+<div id="navigation" class="navigation thin_scrollbar">
+<div class="navigation_section">
+<div class="navigation_title">Pages</div>
+<div id="nav-Home" class="navigation_item"><a href="index.html" target="_self">Home</a></div>
+<div id="nav-GitHub" class="navigation_item"><a href="https://github.com/kovacsv/Online3DViewer" target="_blank">GitHub</a></div>
+</div>
+<div class="navigation_section">
+<div class="navigation_title">Engine Usage</div>
+<div id="nav-Installation" class="navigation_item"><a href="Page_Installation.html" target="_self">Installation</a></div>
+<div id="nav-Usage" class="navigation_item"><a href="Page_Usage.html" target="_self">Usage</a></div>
+<div id="nav-New Features" class="navigation_item"><a href="Page_NewFeatures.html" target="_self">New Features</a></div>
+<div id="nav-Migration Guide" class="navigation_item"><a href="Page_MigrationGuide.html" target="_self">Migration Guide</a></div>
+</div>
+<div class="navigation_section">
+<div class="navigation_title">Contribution</div>
+<div id="nav-Contribution Guidelines" class="navigation_item"><a href="Page_ContributionGuidelines.html" target="_self">Contribution Guidelines</a></div>
+<div id="nav-Environment Setup" class="navigation_item"><a href="Page_EnvironmentSetup.html" target="_self">Environment Setup</a></div>
+</div>
+<div class="navigation_section">
+<div class="navigation_title">Classes</div>
+<div id="nav-Camera" class="navigation_item"><a href="Class_Camera.html" target="_self">Camera</a></div>
+<div id="nav-EdgeSettings" class="navigation_item"><a href="Class_EdgeSettings.html" target="_self">EdgeSettings</a></div>
+<div id="nav-EmbeddedViewer" class="navigation_item"><a href="Class_EmbeddedViewer.html" target="_self">EmbeddedViewer</a></div>
+<div id="nav-EnvironmentSettings" class="navigation_item"><a href="Class_EnvironmentSettings.html" target="_self">EnvironmentSettings</a></div>
+<div id="nav-InputFile" class="navigation_item"><a href="Class_InputFile.html" target="_self">InputFile</a></div>
+<div id="nav-RGBAColor" class="navigation_item"><a href="Class_RGBAColor.html" target="_self">RGBAColor</a></div>
+<div id="nav-RGBColor" class="navigation_item"><a href="Class_RGBColor.html" target="_self">RGBColor</a></div>
+</div>
+<div class="navigation_section">
+<div class="navigation_title">Functions</div>
+<div id="nav-Init3DViewerElements" class="navigation_item"><a href="Function_Init3DViewerElements.html" target="_self">Init3DViewerElements</a></div>
+<div id="nav-Init3DViewerFromFileList" class="navigation_item"><a href="Function_Init3DViewerFromFileList.html" target="_self">Init3DViewerFromFileList</a></div>
+<div id="nav-Init3DViewerFromUrlList" class="navigation_item"><a href="Function_Init3DViewerFromUrlList.html" target="_self">Init3DViewerFromUrlList</a></div>
+</div>
+<div class="navigation_section">
+<div class="navigation_title">Enums</div>
+<div id="nav-FileSource" class="navigation_item"><a href="Enum_FileSource.html" target="_self">FileSource</a></div>
+<div id="nav-NavigationMode" class="navigation_item"><a href="Enum_NavigationMode.html" target="_self">NavigationMode</a></div>
+<div id="nav-ProjectionMode" class="navigation_item"><a href="Enum_ProjectionMode.html" target="_self">ProjectionMode</a></div>
+</div>
+
+</div>
+<div id="main" class="main">
+<div class="page">
+<h1>New Features</h1>
+
+This page documents the latest features added to the Online 3D Viewer, including multiple selection, keyboard shortcuts, enhanced customization options, and improved user experience.
+
+<h2>Multiple Selection</h2>
+
+<h3>Overview</h3>
+<p>The Online 3D Viewer now supports multiple selection of meshes and materials, allowing users to select and work with multiple objects simultaneously.</p>
+
+<h3>How to Use Multiple Selection</h3>
+
+<h4>Tree Menu Selection</h4>
+<ul>
+    <li><strong>Single Selection:</strong> Click on any mesh or material in the navigator tree</li>
+    <li><strong>Multiple Selection:</strong> Hold <kbd>Ctrl</kbd> (Windows/Linux) or <kbd>Cmd</kbd> (Mac) and click multiple items</li>
+    <li><strong>Visual Feedback:</strong> Selected items are highlighted with a distinct color</li>
+</ul>
+
+<h4>3D View Selection</h4>
+<ul>
+    <li><strong>Single Selection:</strong> Click on any 3D object in the viewer</li>
+    <li><strong>Multiple Selection:</strong> Hold <kbd>Ctrl</kbd> (Windows/Linux) or <kbd>Cmd</kbd> (Mac) and click multiple objects</li>
+    <li><strong>Real-time Highlighting:</strong> Selected objects are immediately highlighted</li>
+</ul>
+
+<h3>Multiple Selection Features</h3>
+
+<h4>Sidebar Information</h4>
+<ul>
+    <li><strong>Combined Statistics:</strong> Shows total count, vertices, triangles, and bounding box for multiple selected meshes</li>
+    <li><strong>Material Properties:</strong> Displays combined material information for multiple selected materials</li>
+    <li><strong>Smart Display:</strong> Automatically switches between single and multiple selection views</li>
+</ul>
+
+<h4>Context Menu Actions</h4>
+<ul>
+    <li><strong>Hide All Selected:</strong> Right-click → "Hide all selected Meshes (H)"</li>
+    <li><strong>Fit All Selected:</strong> Right-click → "Fit all selected Meshes to window"</li>
+    <li><strong>Individual Actions:</strong> Single selection still works for individual operations</li>
+</ul>
+
+<h2>Keyboard Shortcuts</h2>
+
+<h3>Selection Management</h3>
+<ul>
+    <li><kbd>H</kbd> - Hide selected mesh(es)</li>
+    <li><kbd>Shift</kbd> + <kbd>H</kbd> - Show all meshes</li>
+    <li><kbd>Escape</kbd> - Clear all selections</li>
+</ul>
+
+<h3>Multiple Selection</h3>
+<ul>
+    <li><kbd>Ctrl</kbd> + <kbd>Click</kbd> - Add/remove item from selection</li>
+    <li><kbd>Cmd</kbd> + <kbd>Click</kbd> - Add/remove item from selection (Mac)</li>
+</ul>
+
+<h2>Enhanced Highlight Color System</h2>
+
+<h3>Customizable Highlight Colors</h3>
+<p>The selection highlight color can now be fully customized through the settings panel.</p>
+
+<h4>Accessing Highlight Color Settings</h4>
+<ol>
+    <li>Click the <strong>Settings</strong> icon in the sidebar</li>
+    <li>Navigate to <strong>Model Display</strong> section</li>
+    <li>Find <strong>Selection Highlight Color</strong> picker</li>
+</ol>
+
+<h4>Color Picker Features</h4>
+<ul>
+    <li><strong>Real-time Updates:</strong> Color changes apply immediately as you adjust the sliders</li>
+    <li><strong>Transparency Support:</strong> Full RGBA color control including alpha channel</li>
+    <li><strong>Predefined Colors:</strong> 8 preset colors for quick selection</li>
+    <li><strong>Persistent Settings:</strong> Your color choice is saved and restored</li>
+</ul>
+
+<h4>Default Color</h4>
+<ul>
+    <li><strong>New Default:</strong> Blue highlight color (#6496ff) with 80% opacity</li>
+    <li><strong>Better Visibility:</strong> Improved contrast on both light and dark backgrounds</li>
+    <li><strong>Professional Look:</strong> Modern, clean appearance</li>
+</ul>
+
+<h2>Enhanced Toolbar</h2>
+
+<h3>Clear Selection Button</h3>
+<p>A new "Clear all selection" button has been added to the toolbar for quick access to clearing all current selections.</p>
+
+<h4>Toolbar Features</h4>
+<ul>
+    <li><strong>Location:</strong> After "Fit model to window" button</li>
+    <li><strong>Icon:</strong> Close/X symbol for intuitive recognition</li>
+    <li><strong>Tooltip:</strong> Shows "Clear all selection (Esc)" with keyboard shortcut hint</li>
+    <li><strong>Functionality:</strong> Clears all selected meshes and materials</li>
+</ul>
+
+<h4>Keyboard Shortcut Integration</h4>
+<ul>
+    <li><strong>Escape Key:</strong> Same functionality as toolbar button</li>
+    <li><strong>Cross-platform:</strong> Works on Windows, Mac, and Linux</li>
+    <li><strong>Prevents Default:</strong> Stops browser's default Escape behavior</li>
+</ul>
+
+<h2>Improved User Experience</h2>
+
+<h3>Visual Feedback</h3>
+<ul>
+    <li><strong>Multiple Selection Indicators:</strong> Distinct visual styling for multiple selected items</li>
+    <li><strong>Real-time Updates:</strong> Immediate visual feedback for all interactions</li>
+    <li><strong>Consistent Styling:</strong> Unified appearance across all selection states</li>
+</ul>
+
+<h3>Context-Aware Interface</h3>
+<ul>
+    <li><strong>Smart Context Menus:</strong> Different options based on selection state</li>
+    <li><strong>Dynamic Sidebar:</strong> Content changes based on what's selected</li>
+    <li><strong>Intuitive Workflow:</strong> Natural progression from single to multiple selection</li>
+</ul>
+
+<h3>Performance Optimizations</h3>
+<ul>
+    <li><strong>Efficient Selection Management:</strong> Optimized data structures for multiple selections</li>
+    <li><strong>Minimal Rendering:</strong> Smart updates that only re-render when necessary</li>
+    <li><strong>Memory Management:</strong> Proper cleanup of selection states</li>
+</ul>
+
+<h2>Technical Implementation</h2>
+
+<h3>Core Components</h3>
+<ul>
+    <li><strong>MultipleSelection Class:</strong> Manages selection state with efficient data structures</li>
+    <li><strong>Enhanced Navigator:</strong> Supports both single and multiple selection modes</li>
+    <li><strong>Smart Sidebar:</strong> Dynamically displays relevant information</li>
+    <li><strong>Real-time Color System:</strong> Immediate visual updates for color changes</li>
+</ul>
+
+<h3>Data Structures</h3>
+<ul>
+    <li><strong>Map-based Storage:</strong> Efficient lookup and comparison of selected items</li>
+    <li><strong>Event-driven Updates:</strong> Reactive system that responds to user interactions</li>
+    <li><strong>Persistent Settings:</strong> Cookie-based storage for user preferences</li>
+</ul>
+
+<h2>Browser Compatibility</h2>
+
+<h3>Supported Browsers</h3>
+<ul>
+    <li><strong>Chrome:</strong> Full support for all features</li>
+    <li><strong>Firefox:</strong> Full support for all features</li>
+    <li><strong>Safari:</strong> Full support for all features</li>
+    <li><strong>Edge:</strong> Full support for all features</li>
+</ul>
+
+<h3>Keyboard Support</h3>
+<ul>
+    <li><strong>Windows/Linux:</strong> Ctrl key for multiple selection</li>
+    <li><strong>Mac:</strong> Cmd key for multiple selection</li>
+    <li><strong>Cross-platform:</strong> Escape key for clearing selections</li>
+</ul>
+
+<h2>Migration Notes</h2>
+
+<h3>For Existing Users</h3>
+<ul>
+    <li><strong>Backward Compatible:</strong> All existing functionality remains unchanged</li>
+    <li><strong>Enhanced Defaults:</strong> Better default highlight color and improved UX</li>
+    <li><strong>New Features:</strong> Multiple selection and keyboard shortcuts are additive</li>
+</ul>
+
+<h3>For Developers</h3>
+<ul>
+    <li><strong>API Compatibility:</strong> Existing APIs remain unchanged</li>
+    <li><strong>New Methods:</strong> Additional methods available for advanced usage</li>
+    <li><strong>Enhanced Events:</strong> More detailed event information for selections</li>
+</ul>
+
+</div>
+</div>
+<script type="text/javascript">Init ('New Features')</script>
+</body>
+
+</html>

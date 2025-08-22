@@ -58,7 +58,9 @@ export class TreeViewItem
     {
         this.mainElement.classList.add ('clickable');
         this.mainElement.style.cursor = 'pointer';
-        this.mainElement.addEventListener ('click', onClick);
+        this.mainElement.addEventListener ('click', (event) => {
+            onClick(event);
+        });
     }
 
     SetParent (parent)
@@ -78,13 +80,35 @@ export class TreeViewSingleItem extends TreeViewItem
     {
         super (name, icon);
         this.selected = false;
+        this.multiSelected = false;
     }
 
     SetSelected (selected)
     {
         this.selected = selected;
+        this.multiSelected = false;
+        this.UpdateSelectionStyle();
+    }
+
+    SetMultiSelected (multiSelected)
+    {
+        this.multiSelected = multiSelected;
+        if (this.multiSelected) {
+            this.selected = false;
+        }
+        this.UpdateSelectionStyle();
+    }
+
+    UpdateSelectionStyle ()
+    {
+        this.mainElement.classList.remove('selected', 'multi-selected');
         if (this.selected) {
-            this.mainElement.classList.add ('selected');
+            this.mainElement.classList.add('selected');
+        } else if (this.multiSelected) {
+            this.mainElement.classList.add('multi-selected');
+        }
+
+        if (this.selected || this.multiSelected) {
             let parent = this.parent;
             if (parent === null) {
                 ScrollToView (this.mainElement);
@@ -95,9 +119,12 @@ export class TreeViewSingleItem extends TreeViewItem
                     parent = parent.parent;
                 }
             }
-        } else {
-            this.mainElement.classList.remove ('selected');
         }
+    }
+
+    IsSelected ()
+    {
+        return this.selected || this.multiSelected;
     }
 }
 

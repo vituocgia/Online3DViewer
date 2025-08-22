@@ -2,7 +2,7 @@ import { GetFileExtension, TransformFileHostUrls } from '../engine/io/fileutils.
 import { InputFilesFromFileObjects, InputFilesFromUrls } from '../engine/import/importerfiles.js';
 import { ImportErrorCode, ImportSettings } from '../engine/import/importer.js';
 import { NavigationMode, ProjectionMode } from '../engine/viewer/camera.js';
-import { RGBColor } from '../engine/model/color.js';
+import { RGBAColor } from '../engine/model/color.js';
 import { Viewer } from '../engine/viewer/viewer.js';
 import { AddDiv, AddDomElement, ShowDomElement, SetDomElementOuterHeight, CreateDomElement, GetDomElementOuterWidth, GetDomElementOuterHeight } from '../engine/viewer/domutils.js';
 import { CalculatePopupPositionToScreen, ShowListPopup } from './dialogs.js';
@@ -198,10 +198,11 @@ export class Website
         this.sidebar = new Sidebar (this.parameters.sidebarDiv, this.settings);
         this.modelLoaderUI = new ThreeModelLoaderUI ();
         this.themeHandler = new ThemeHandler ();
-        this.highlightColor = new RGBColor (142, 201, 240);
+        this.highlightColor = this.settings.highlightColor || new RGBAColor (100, 150, 255, 200);
         this.uiState = WebsiteUIState.Undefined;
         this.layouter = new WebsiteLayouter (this.parameters, this.navigator, this.sidebar, this.viewer, this.measureTool);
         this.model = null;
+        this.isCtrlPressed = false;
     }
 
     Load ()
@@ -226,6 +227,7 @@ export class Website
         this.InitSidebar ();
         this.InitNavigator ();
         this.InitCookieConsent ();
+        this.InitKeyboardEvents ();
 
         this.viewer.SetMouseClickHandler (this.OnModelClicked.bind (this));
         this.viewer.SetMouseMoveHandler (this.OnModelMouseMoved.bind (this));
@@ -320,9 +322,19 @@ export class Website
 
         let meshUserData = this.viewer.GetMeshUserDataUnderMouse (IntersectionMode.MeshAndLine, mouseCoordinates);
         if (meshUserData === null) {
-            this.navigator.SetSelection (null);
+            // Only clear selection if not holding Ctrl (no multiple selection)
+            if (!this.isCtrlPressed) {
+                this.navigator.SetSelection (null);
+            }
         } else {
-            this.navigator.SetSelection (new Selection (SelectionType.Mesh, meshUserData.originalMeshInstance.id));
+            let meshSelection = new Selection (SelectionType.Mesh, meshUserData.originalMeshInstance.id);
+            if (this.isCtrlPressed) {
+                // Ctrl+Click for multiple selection
+                this.navigator.ToggleSelection (meshSelection);
+            } else {
+                // Single click for single selection
+                this.navigator.SetSelection (meshSelection);
+            }
         }
     }
 
@@ -347,7 +359,7 @@ export class Website
             });
             if (this.navigator.HasHiddenMesh ()) {
                 items.push ({
-                    name : Loc ('Show all meshes'),
+                    name : Loc ('Show all meshes') + ' (Shift+H)',
                     icon : 'visible',
                     onClick : () => {
                         this.navigator.ShowAllMeshes (true);
@@ -355,13 +367,40 @@ export class Website
                 });
             }
         } else {
-            items.push ({
-                name : Loc ('Hide mesh'),
-                icon : 'hidden',
-                onClick : () => {
-                    this.navigator.ToggleMeshVisibility (meshUserData.originalMeshInstance.id);
-                }
-            });
+            // Check if multiple meshes are selected
+            let selectedMeshIds = this.navigator.GetSelectedMeshIds();
+            let isMultipleSelection = selectedMeshIds.length > 1;
+
+            if (isMultipleSelection) {
+                // Multiple meshes selected - add multiple selection options
+                items.push ({
+                    name : Loc ('Hide all selected Meshes') + ' (H)',
+                    icon : 'hidden',
+                    onClick : () => {
+                        for (let meshId of selectedMeshIds) {
+                            this.navigator.ToggleMeshVisibility (meshId);
+                        }
+                    }
+                });
+                items.push ({
+                    name : Loc ('Fit all selected Meshes to window'),
+                    icon : 'fit',
+                    onClick : () => {
+                        let meshIdSet = new Set(selectedMeshIds);
+                        this.FitMeshesToWindow (meshIdSet);
+                    }
+                });
+            } else {
+                // Single mesh selected - show individual options
+                items.push ({
+                    name : Loc ('Hide mesh') + ' (H)',
+                    icon : 'hidden',
+                    onClick : () => {
+                        this.navigator.ToggleMeshVisibility (meshUserData.originalMeshInstance.id);
+                    }
+                });
+            }
+
             items.push ({
                 name : Loc ('Fit mesh to window'),
                 icon : 'fit',
@@ -369,6 +408,7 @@ export class Website
                     this.navigator.FitMeshToWindow (meshUserData.originalMeshInstance.id);
                 }
             });
+
             if (this.navigator.MeshItemCount () > 1) {
                 let isMeshIsolated = this.navigator.IsMeshIsolated (meshUserData.originalMeshInstance.id);
                 items.push ({
@@ -464,13 +504,16 @@ export class Website
 
     UpdateMeshesSelection ()
     {
-        let selectedMeshId = this.navigator.GetSelectedMeshId ();
-        this.viewer.SetMeshesHighlight (this.highlightColor, (meshUserData) => {
-            if (selectedMeshId !== null && meshUserData.originalMeshInstance.id.IsEqual (selectedMeshId)) {
-                return true;
-            }
-            return false;
-        });
+        let selectedMeshIds = this.navigator.GetSelectedMeshIds();
+        if (selectedMeshIds.length === 0) {
+            this.viewer.SetMeshesHighlight (null, () => false);
+        } else {
+            this.viewer.SetMeshesHighlight (this.highlightColor, (meshUserData) => {
+                return selectedMeshIds.some(meshId =>
+                    meshId.GetKey() === meshUserData.originalMeshInstance.id.GetKey()
+                );
+            });
+        }
     }
 
     LoadModelFromUrlList (urls, settings)
@@ -675,6 +718,9 @@ export class Website
         AddButton (this.toolbar, 'fit', Loc ('Fit model to window'), ['only_on_model'], () => {
             this.FitModelToWindow (false);
         });
+        AddButton (this.toolbar, 'close', Loc ('Clear all selection') + ' (Esc)', ['only_on_model'], () => {
+            this.navigator.SetSelection (null);
+        });
         AddButton (this.toolbar, 'up_y', Loc ('Set Y axis as up vector'), ['only_on_model'], () => {
             this.viewer.SetUpVector (Direction.Y, true);
         });
@@ -816,6 +862,11 @@ export class Website
                     this.measureTool.UpdatePanel ();
                 }
             },
+            onHighlightColorChanged : () => {
+                this.settings.SaveToCookies ();
+                this.highlightColor = this.settings.highlightColor || new RGBAColor (100, 150, 255, 200);
+                this.UpdateMeshesSelection();
+            },
             onDefaultColorChanged : () => {
                 this.settings.SaveToCookies ();
                 let modelLoader = this.modelLoaderUI.GetModelLoader ();
@@ -919,17 +970,59 @@ export class Website
                 this.UpdateMeshesVisibility ();
             },
             onMeshSelectionChanged : () => {
-                this.UpdateMeshesSelection ();
+                let selectedMeshIds = this.navigator.GetSelectedMeshIds();
+                if (selectedMeshIds.length === 0) {
+                    this.sidebar.AddObject3DProperties (this.model, this.model);
+                } else if (selectedMeshIds.length === 1) {
+                    let meshInstance = this.model.GetMeshInstance (selectedMeshIds[0]);
+                    this.sidebar.AddObject3DProperties (this.model, meshInstance);
+                } else {
+                    // Multiple selections
+                    let meshInstances = [];
+                    for (let meshId of selectedMeshIds) {
+                        let meshInstance = this.model.GetMeshInstance (meshId);
+                        if (meshInstance !== null) {
+                            meshInstances.push(meshInstance);
+                        }
+                    }
+                    this.sidebar.AddMultipleObject3DProperties (this.model, meshInstances);
+                }
+                this.UpdateMeshesSelection();
             },
             onSelectionCleared : () => {
                 this.sidebar.AddObject3DProperties (this.model, this.model);
+                this.UpdateMeshesSelection();
             },
             onMeshSelected : (meshInstanceId) => {
+                // This callback is only called for single selections (no Ctrl key)
+                // Update the sidebar to show the selected mesh
                 let meshInstance = this.model.GetMeshInstance (meshInstanceId);
                 this.sidebar.AddObject3DProperties (this.model, meshInstance);
+                this.UpdateMeshesSelection();
             },
             onMaterialSelected : (materialIndex) => {
+                // This callback is only called for single selections (no Ctrl key)
+                // Update the sidebar to show the selected material
                 this.sidebar.AddMaterialProperties (this.model.GetMaterial (materialIndex));
+                this.UpdateMeshesSelection();
+            },
+            onMaterialSelectionChanged : () => {
+                let selectedMaterialIndices = this.navigator.GetSelectedMaterialIndices();
+                if (selectedMaterialIndices.length === 0) {
+                    // No materials selected, show model properties
+                    this.sidebar.AddObject3DProperties (this.model, this.model);
+                } else if (selectedMaterialIndices.length === 1) {
+                    // Single material selected
+                    this.sidebar.AddMaterialProperties (this.model.GetMaterial (selectedMaterialIndices[0]));
+                } else {
+                    // Multiple materials selected - show combined info
+                    let materials = [];
+                    for (let materialIndex of selectedMaterialIndices) {
+                        materials.push(this.model.GetMaterial(materialIndex));
+                    }
+                    this.sidebar.AddMultipleMaterialProperties (materials);
+                }
+                this.UpdateMeshesSelection();
             },
             onResizeRequested : () => {
                 this.layouter.Resize ();
@@ -961,6 +1054,20 @@ export class Website
         return buttonLink;
     }
 
+    HideSelectedMeshes ()
+    {
+        let selectedMeshIds = this.navigator.GetSelectedMeshIds();
+        if (selectedMeshIds.length === 0) {
+            // No meshes selected, do nothing
+            return;
+        }
+
+        // Hide all selected meshes
+        for (let meshId of selectedMeshIds) {
+            this.navigator.ToggleMeshVisibility (meshId);
+        }
+    }
+
     InitCookieConsent ()
     {
         let accepted = CookieGetBoolVal ('ov_cookie_consent', false);
@@ -975,6 +1082,40 @@ export class Website
         acceptButton.addEventListener ('click', () => {
             CookieSetBoolVal ('ov_cookie_consent', true);
             popupDiv.remove ();
+        });
+    }
+
+    InitKeyboardEvents ()
+    {
+        document.addEventListener ('keydown', (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                this.isCtrlPressed = true;
+            }
+
+            // Handle H key for hiding meshes
+            if (event.key === 'h' || event.key === 'H') {
+                if (event.shiftKey) {
+                    // Shift + H: Show all meshes
+                    event.preventDefault();
+                    this.navigator.ShowAllMeshes(true);
+                } else {
+                    // H: Hide selected mesh(es)
+                    event.preventDefault();
+                    this.HideSelectedMeshes();
+                }
+            }
+
+            // Handle Escape key for clearing selection
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                this.navigator.SetSelection (null);
+            }
+        });
+
+        document.addEventListener ('keyup', (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                this.isCtrlPressed = false;
+            }
         });
     }
 }

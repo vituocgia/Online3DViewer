@@ -330,10 +330,13 @@ export class NavigatorMeshesPanel extends NavigatorPanel
                     panel.callbacks.onMeshShowHide (selectedMeshId);
                 },
                 onFitToWindow : (selectedMeshId) => {
-                    panel.callbacks.onMeshFitToWindow (selectedMeshId);
+                    panel.callbacks.onFitToWindow (selectedMeshId);
                 },
-                onSelected : (selectedMeshId) => {
+                onMeshSelected : (selectedMeshId) => {
                     panel.callbacks.onMeshSelected (selectedMeshId);
+                },
+                onMeshToggleSelection : (selectedMeshId) => {
+                    panel.callbacks.onMeshToggleSelection (selectedMeshId);
                 }
             });
             panel.meshInstanceIdToItem.set (meshInstanceId.GetKey (), meshItem);
@@ -503,5 +506,25 @@ export class NavigatorMeshesPanel extends NavigatorPanel
     {
         this.ShowAllMeshes (false);
         this.ToggleMeshVisibility (meshInstanceId);
+    }
+
+    ClearSelections ()
+    {
+        for (const meshItem of this.meshInstanceIdToItem.values()) {
+            if (meshItem && typeof meshItem.SetSelected === 'function') {
+                meshItem.SetSelected(false);
+            }
+            if (meshItem && typeof meshItem.SetMultiSelected === 'function') {
+                meshItem.SetMultiSelected(false);
+            }
+        }
+        for (const nodeItem of this.nodeIdToItem.values()) {
+            if (nodeItem && typeof nodeItem.SetSelected === 'function') {
+                nodeItem.SetSelected(false);
+            }
+            if (nodeItem && typeof nodeItem.SetMultiSelected === 'function') {
+                nodeItem.SetMultiSelected(false);
+            }
+        }
     }
 }

@@ -119,8 +119,11 @@ export class NavigatorMaterialsPanel extends NavigatorPanel
             let material = model.GetMaterial (materialIndex);
             let materialName = GetMaterialName (material.name);
             let materialItem = new MaterialItem (materialName, materialIndex, {
-                onSelected : (materialIndex) => {
+                onMaterialSelected : (materialIndex) => {
                     this.callbacks.onMaterialSelected (materialIndex);
+                },
+                onMaterialToggleSelection : (materialIndex) => {
+                    this.callbacks.onMaterialToggleSelection (materialIndex);
                 }
             });
             this.materialIndexToItem.set (materialIndex, materialItem);
@@ -136,6 +139,18 @@ export class NavigatorMaterialsPanel extends NavigatorPanel
     SelectMaterialItem (materialIndex, isSelected)
     {
         this.GetMaterialItem (materialIndex).SetSelected (isSelected);
+    }
+
+    ClearSelections ()
+    {
+        for (let [materialIndex, materialItem] of this.materialIndexToItem) {
+            if (materialItem && typeof materialItem.SetSelected === 'function') {
+                materialItem.SetSelected(false);
+            }
+            if (materialItem && typeof materialItem.SetMultiSelected === 'function') {
+                materialItem.SetMultiSelected(false);
+            }
+        }
     }
 
     UpdateMeshList (meshInstanceArray)

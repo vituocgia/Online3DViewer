@@ -484,6 +484,43 @@ export class Viewer
         this.Render ();
     }
 
+    SetMeshesOpacity (getOpacity)
+    {
+        let meshCount = 0;
+        let edgeCount = 0;
+
+        this.mainModel.EnumerateMeshesAndLines ((mesh) => {
+            let opacity = getOpacity (mesh.userData);
+            meshCount++;
+
+            if (mesh.userData.threeMaterials !== null) {
+                // If mesh is highlighted, don't change its opacity
+                return;
+            }
+
+            if (mesh.material.transparent !== (opacity < 1.0)) {
+                mesh.material.transparent = (opacity < 1.0);
+            }
+            if (mesh.material.opacity !== opacity) {
+                mesh.material.opacity = opacity;
+            }
+        });
+        this.mainModel.EnumerateEdges ((edge) => {
+            let opacity = getOpacity (edge.userData);
+            edgeCount++;
+
+            if (edge.material.transparent !== (opacity < 1.0)) {
+                edge.material.transparent = (opacity < 1.0);
+            }
+            if (edge.material.opacity !== opacity) {
+                edge.material.opacity = opacity;
+            }
+        });
+
+        console.log('SetMeshesOpacity: Updated', meshCount, 'meshes and', edgeCount, 'edges');
+        this.Render ();
+    }
+
     GetMeshUserDataUnderMouse (intersectionMode, mouseCoords)
     {
         let intersection = this.GetMeshIntersectionUnderMouse (intersectionMode, mouseCoords);

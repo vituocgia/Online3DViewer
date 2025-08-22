@@ -16,6 +16,19 @@ div.ov_tree_view div.ov_tree_item.selected
 	font-weight: bold;
 }
 
+div.ov_tree_view div.ov_tree_item.multi-selected
+{
+	background: var(--ov_treeview_multi_selected_color);
+	font-weight: bold;
+	border: 2px solid var(--ov_treeview_selected_color);
+}
+
+div.ov_tree_view div.ov_tree_item.multi-selected:hover
+{
+	background: var(--ov_treeview_selected_color);
+	border-color: var(--ov_treeview_multi_selected_color);
+}
+
 div.ov_tree_view div.ov_tree_item.clickable
 {
 	cursor: pointer;
@@ -47,6 +60,20 @@ div.ov_tree_view div.ov_tree_item_name
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+div.ov_tree_view div.ov_tree_item_name::after
+{
+	content: " (Ctrl+Click for multiple)";
+	font-size: 0.8em;
+	color: var(--ov_light_icon_color);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+div.ov_tree_view div.ov_tree_item.clickable:hover div.ov_tree_item_name::after
+{
+	opacity: 1;
 }
 
 div.ov_tree_view div.ov_tree_view_children

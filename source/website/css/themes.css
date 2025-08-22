@@ -21,6 +21,7 @@
 	--ov_toolbar_selected_color: #e1e1e1;
 	--ov_toolbar_separator_color: #cccccc;
 	--ov_treeview_selected_color: #eeeeee;
+	--ov_treeview_multi_selected_color: #e8f4fd;
     --ov_dialog_foreground_color: #000000;
     --ov_dialog_background_color: #ffffff;
 	--ov_dialog_control_border_color: #e1e1e1;
@@ -48,6 +49,7 @@
 	--ov_toolbar_selected_color_dark: #272727;
 	--ov_toolbar_separator_color_dark: #888888;
 	--ov_treeview_selected_color_dark: #38393d;
+	--ov_treeview_multi_selected_color_dark: #2a4a5a;
     --ov_dialog_foreground_color_dark: #fafafa;
     --ov_dialog_background_color_dark: #3c3c40;
 	--ov_dialog_control_border_color_dark: #e1e1e1;

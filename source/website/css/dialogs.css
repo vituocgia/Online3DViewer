@@ -184,7 +184,7 @@ div.ov_popup
 {
 	color: var(--ov_dialog_foreground_color);
 	background: var(--ov_dialog_background_color);
-	width: 200px;
+	width: 250px;
 	padding: 10px;
 	box-shadow: var(--ov_shadow);
 	border-radius: 5px;
