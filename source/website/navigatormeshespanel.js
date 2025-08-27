@@ -1,5 +1,5 @@
 import { MeshInstanceId } from '../engine/model/meshinstance.js';
-import { AddDiv, CreateDiv, ShowDomElement, ClearDomElement, InsertDomElementBefore, SetDomElementHeight, GetDomElementOuterHeight, IsDomElementVisible } from '../engine/viewer/domutils.js';
+import { AddDiv, CreateDiv, ShowDomElement, ClearDomElement, InsertDomElementBefore, SetDomElementHeight, GetDomElementOuterHeight, IsDomElementVisible, CreateDomElement } from '../engine/viewer/domutils.js';
 import { CalculatePopupPositionToElementBottomRight, ShowListPopup } from './dialogs.js';
 import { MeshItem, NavigatorItemRecurse, NodeItem } from './navigatoritems.js';
 import { NavigatorPanel, NavigatorPopupButton } from './navigatorpanel.js';
@@ -75,11 +75,51 @@ export class NavigatorMeshesPanel extends NavigatorPanel
         this.rootItem = null;
         this.mode = MeshesPanelMode.Simple;
         this.buttons = null;
+        this.searchFilter = '';
+        this.allItems = new Map(); // Store all items for filtering
 
         this.treeView.AddClass ('tight');
         this.titleButtonsDiv = AddDiv (this.titleDiv, 'ov_navigator_tree_title_buttons');
         this.buttonsDiv = CreateDiv ('ov_navigator_buttons');
         InsertDomElementBefore (this.buttonsDiv, this.treeDiv);
+
+        // Add search input field
+        this.searchContainer = AddDiv (this.titleDiv, 'ov_navigator_search_container');
+        this.searchInput = CreateDomElement ('input', 'ov_navigator_search_input');
+        this.searchInput.setAttribute ('type', 'text');
+        this.searchInput.setAttribute ('id', 'mesh-search-input');
+        this.searchInput.setAttribute ('name', 'mesh-search');
+        this.searchInput.setAttribute ('placeholder', Loc ('Search meshes...'));
+        this.searchInput.setAttribute ('title', Loc ('Search meshes by name'));
+        this.searchContainer.appendChild (this.searchInput);
+
+        // Add search icon
+        this.searchIcon = AddSvgIconElement (this.searchContainer, 'search', 'ov_navigator_search_icon');
+
+        // Add clear button (initially hidden)
+        this.clearButton = AddSvgIconElement (this.searchContainer, 'close', 'ov_navigator_clear_button');
+        this.clearButton.style.display = 'none';
+        this.clearButton.style.cursor = 'pointer';
+        this.clearButton.setAttribute ('title', Loc ('Clear search'));
+
+        // Add event listeners for search
+        this.searchInput.addEventListener ('input', () => {
+            this.searchFilter = this.searchInput.value.toLowerCase ();
+            this.ApplySearchFilter ();
+            this.UpdateClearButtonVisibility ();
+        });
+
+        this.searchInput.addEventListener ('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.ClearSearch ();
+                event.stopPropagation (); // Prevent the global Escape handler from firing
+            }
+        });
+
+        // Add clear button click handler
+        this.clearButton.addEventListener ('click', () => {
+            this.ClearSearch ();
+        });
 
         this.popupDiv = AddDiv (this.panelDiv, 'ov_navigator_info_panel');
         this.materialsButton = new NavigatorMaterialsPopupButton (this.popupDiv);
@@ -113,6 +153,11 @@ export class NavigatorMeshesPanel extends NavigatorPanel
         ClearDomElement (this.titleButtonsDiv);
         ClearDomElement (this.buttonsDiv);
         this.buttons = null;
+        this.searchFilter = '';
+        this.searchInput.value = '';
+        this.allItems.clear ();
+        this.UpdateClearButtonVisibility ();
+        this.HideNoResultsMessage ();
     }
 
     ClearMeshTree ()
@@ -122,6 +167,7 @@ export class NavigatorMeshesPanel extends NavigatorPanel
         this.nodeIdToItem = new Map ();
         this.meshInstanceIdToItem = new Map ();
         this.rootItem = null;
+        this.allItems.clear ();
     }
 
     Init (callbacks)
@@ -318,6 +364,92 @@ export class NavigatorMeshesPanel extends NavigatorPanel
         }
     }
 
+    ApplySearchFilter ()
+    {
+        if (!this.searchFilter) {
+            // Show all items when no filter
+            this.allItems.forEach ((item) => {
+                if (item.mainElement) {
+                    ShowDomElement (item.mainElement, true);
+                }
+            });
+            return;
+        }
+
+        // Hide all items first
+        this.allItems.forEach ((item) => {
+            if (item.mainElement) {
+                ShowDomElement (item.mainElement, false);
+            }
+        });
+
+        // Show items that match the filter
+        this.allItems.forEach ((item) => {
+            if (item.name && item.name.toLowerCase ().includes (this.searchFilter)) {
+                ShowDomElement (item.mainElement, true);
+                // Also show parent nodes to maintain tree structure
+                this.ShowParentNodes (item);
+            }
+        });
+
+        // If no items match, show a "no results" message
+        let hasVisibleItems = false;
+        this.allItems.forEach ((item) => {
+            if (item.mainElement && IsDomElementVisible (item.mainElement)) {
+                hasVisibleItems = true;
+            }
+        });
+
+        if (!hasVisibleItems) {
+            this.ShowNoResultsMessage ();
+        } else {
+            this.HideNoResultsMessage ();
+        }
+    }
+
+    ShowNoResultsMessage ()
+    {
+        if (!this.noResultsDiv) {
+            this.noResultsDiv = AddDiv (this.treeDiv, 'ov_navigator_no_results');
+            this.noResultsDiv.innerHTML = Loc ('No meshes found matching your search.');
+        }
+        ShowDomElement (this.noResultsDiv, true);
+    }
+
+    HideNoResultsMessage ()
+    {
+        if (this.noResultsDiv) {
+            ShowDomElement (this.noResultsDiv, false);
+        }
+    }
+
+    UpdateClearButtonVisibility ()
+    {
+        if (this.searchInput.value.length > 0) {
+            this.clearButton.style.display = 'block';
+        } else {
+            this.clearButton.style.display = 'none';
+        }
+    }
+
+    ClearSearch ()
+    {
+        this.searchInput.value = '';
+        this.searchFilter = '';
+        this.ApplySearchFilter ();
+        this.UpdateClearButtonVisibility ();
+        this.searchInput.focus ();
+    }
+
+    ShowParentNodes (item)
+    {
+        let parent = item.parent;
+        while (parent && parent.mainElement) {
+            ShowDomElement (parent.mainElement, true);
+            parent = parent.parent;
+        }
+    }
+
     FillMeshTree (model)
     {
         function AddMeshToNodeTree (panel, node, mesh, meshIndex, parentItem, mode)
@@ -340,6 +472,7 @@ export class NavigatorMeshesPanel extends NavigatorPanel
                 }
             });
             panel.meshInstanceIdToItem.set (meshInstanceId.GetKey (), meshItem);
+            panel.allItems.set (meshInstanceId.GetKey (), meshItem);
             parentItem.AddChild (meshItem);
         }
 
@@ -356,13 +489,14 @@ export class NavigatorMeshesPanel extends NavigatorPanel
                 }
             });
             panel.nodeIdToItem.set (nodeId, nodeItem);
+            panel.allItems.set (nodeId, nodeItem);
             return nodeItem;
         }
 
         function CreateDummyRootItem (panel, node)
         {
             const nodeId = node.GetId ();
-            let rootItem = new NodeItem (null, nodeId, {
+            let rootItem = new NodeItem ('SCENE', nodeId, {
                 onVisibilityChanged : (isVisible) => {
                     if (isVisible) {
                         SetSvgIconImageElement (panel.buttons.showHideMeshes.iconDiv, 'visible');
@@ -375,6 +509,7 @@ export class NavigatorMeshesPanel extends NavigatorPanel
             rootItem.ShowChildren (true);
             panel.treeView.AddChild (rootItem);
             panel.nodeIdToItem.set (nodeId, rootItem);
+            panel.allItems.set (nodeId, rootItem);
             return rootItem;
         }
 

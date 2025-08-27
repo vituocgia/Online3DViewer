@@ -1322,8 +1322,17 @@ export class Website {
                 this.isCtrlPressed = true;
             }
 
-            // Handle H key for hiding meshes
-            if (event.key === 'h' || event.key === 'H') {
+            // Check if user is typing in an input field
+            const activeElement = document.activeElement;
+            const isTypingInInput = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.contentEditable === 'true' ||
+                activeElement.classList.contains('ov_navigator_search_input')
+            );
+
+            // Handle H key for hiding meshes (only if not typing in input)
+            if ((event.key === 'h' || event.key === 'H') && !isTypingInInput) {
                 if (event.shiftKey) {
                     // Shift + H: Show all meshes
                     event.preventDefault();
@@ -1335,8 +1344,8 @@ export class Website {
                 }
             }
 
-            // Handle Escape key for clearing selection
-            if (event.key === 'Escape') {
+            // Handle Escape key for clearing selection (only if not typing in input)
+            if (event.key === 'Escape' && !isTypingInInput) {
                 event.preventDefault();
                 this.navigator.SetSelection(null);
             }

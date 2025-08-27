@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mesh Search Functionality Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-steps {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-steps ol {
+            margin: 10px 0;
+        }
+        .test-steps li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mesh Search Functionality Test</h1>
+    
+    <div class="test-info">
+        <h2>Feature Overview</h2>
+        <p>This test demonstrates the new search functionality added to the mesh tree panel in the Online 3D Viewer.</p>
+        <p><strong>Features implemented:</strong></p>
+        <ul>
+            <li>Search input field in the mesh panel title area</li>
+            <li>Real-time filtering of mesh items by name</li>
+            <li>Clear button to reset search</li>
+            <li>Escape key to clear search</li>
+            <li>"No results" message when no matches found</li>
+            <li>Maintains tree structure by showing parent nodes</li>
+        </ul>
+    </div>
+
+    <div class="test-steps">
+        <h2>Test Steps</h2>
+        <ol>
+            <li>Load a 3D model with multiple mesh items (e.g., a complex model from the test files)</li>
+            <li>Open the mesh panel in the navigator (left sidebar)</li>
+            <li>Look for the search input field below the "Meshes" title</li>
+            <li>Type a partial mesh name to see real-time filtering</li>
+            <li>Test the clear button (X) to reset the search</li>
+            <li>Test the Escape key to clear the search</li>
+            <li>Try searching for a non-existent mesh name to see the "no results" message</li>
+        </ol>
+    </div>
+
+    <div class="test-info">
+        <h2>Technical Implementation</h2>
+        <p><strong>Files modified:</strong></p>
+        <ul>
+            <li><code>source/website/navigatormeshespanel.js</code> - Added search functionality</li>
+            <li><code>source/website/css/navigator.css</code> - Added search input styles</li>
+            <li><code>assets/icons/search.svg</code> - Added search icon</li>
+        </ul>
+        
+        <p><strong>Key features:</strong></p>
+        <ul>
+            <li>Case-insensitive search</li>
+            <li>Real-time filtering as you type</li>
+            <li>Maintains tree hierarchy visibility</li>
+            <li>Responsive UI with clear visual feedback</li>
+            <li>Keyboard shortcuts (Escape to clear)</li>
+        </ul>
+    </div>
+
+    <p><a href="../website/index.html" target="_blank">Open Online 3D Viewer to test the functionality</a></p>
+</body>
+</html>
