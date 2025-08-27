@@ -324,10 +324,11 @@ class SettingsModelDisplaySection extends SettingsSection
         this.opacitySlider.setAttribute ('title', 'Global Opacity');
         this.opacitySliderValue = AddDomElement (opacityRow, 'span', 'ov_slider_label');
         this.opacitySlider.addEventListener ('input', () => {
+            // console.log('Opacity slider input event, value:', this.opacitySlider.value);
             this.opacitySliderValue.innerHTML = this.opacitySlider.value + '%';
         });
         this.opacitySlider.addEventListener ('change', () => {
-            // console.log('Opacity slider changed to:', this.opacitySlider.value);
+            // console.log('Opacity slider change event, value:', this.opacitySlider.value);
             this.settings.globalOpacity = this.opacitySlider.value / 100.0;
             this.settings.SaveToCookies ();
             // console.log('Calling onGlobalOpacityChanged callback...');
@@ -335,12 +336,15 @@ class SettingsModelDisplaySection extends SettingsSection
                 this.callbacks.onGlobalOpacityChanged ();
             } else {
                 console.error('onGlobalOpacityChanged callback is not available!');
-                // console.log('Available callbacks:', Object.keys(this.callbacks || {}));
+                console.log('Available callbacks:', Object.keys(this.callbacks || {}));
             }
         });
         this.opacitySlider.value = Math.round (this.settings.globalOpacity * 100);
         this.opacitySliderValue.innerHTML = Math.round (this.settings.globalOpacity * 100) + '%';
         // console.log('Opacity slider initialized with value:', this.opacitySlider.value, 'from settings:', this.settings.globalOpacity);
+
+        // Initially disable the opacity slider until a model is loaded
+        this.SetOpacitySliderEnabled(false);
     }
 
     UpdateEnvironmentMap ()
@@ -404,6 +408,22 @@ class SettingsModelDisplaySection extends SettingsSection
         }
         if (this.environmentMapPbrDiv !== null) {
            ShowDomElement (this.environmentMapPbrDiv, isPhysicallyBased);
+        }
+    }
+
+    SetOpacitySliderEnabled (enabled)
+    {
+        if (this.opacitySlider !== null) {
+            // console.log('Setting opacity slider enabled:', enabled);
+            this.opacitySlider.disabled = !enabled;
+            if (enabled) {
+                this.opacitySlider.style.opacity = '1.0';
+                this.opacitySlider.style.cursor = 'pointer';
+            } else {
+                this.opacitySlider.style.opacity = '0.5';
+                this.opacitySlider.style.cursor = 'not-allowed';
+            }
+            // console.log('Opacity slider disabled state:', this.opacitySlider.disabled);
         }
     }
 
@@ -599,6 +619,11 @@ export class SidebarSettingsPanel extends SidebarPanel
         this.modelDisplaySection.UpdateVisibility ();
         this.importParametersSection.UpdateVisibility ();
         this.Resize ();
+    }
+
+    SetOpacitySliderEnabled (enabled)
+    {
+        this.modelDisplaySection.SetOpacitySliderEnabled (enabled);
     }
 
     ResetToDefaults ()

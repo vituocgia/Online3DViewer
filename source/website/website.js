@@ -268,7 +268,7 @@ export class Website {
             return;
         }
 
-        console.log('SetUIState called - changing from', this.uiState, 'to', uiState);
+        // console.log('SetUIState called - changing from', this.uiState, 'to', uiState);
         this.uiState = uiState;
         if (this.uiState === WebsiteUIState.Intro) {
             ShowDomElement(this.parameters.introDiv, true);
@@ -276,7 +276,7 @@ export class Website {
             ShowDomElement(this.parameters.mainDiv, false);
             ShowOnlyOnModelElements(false);
         } else if (this.uiState === WebsiteUIState.Model) {
-            console.log('UI State changed to Model - model should be ready now');
+            // console.log('UI State changed to Model - model should be ready now');
             ShowDomElement(this.parameters.introDiv, false);
             ShowDomElement(this.parameters.headerDiv, true);
             ShowDomElement(this.parameters.mainDiv, true);
@@ -303,11 +303,16 @@ export class Website {
         this.navigator.Clear();
         this.sidebar.Clear();
 
+        // Disable opacity slider when no model is loaded
+        if (this.sidebar && this.sidebar.settingsPanel && typeof this.sidebar.settingsPanel.SetOpacitySliderEnabled === 'function') {
+            this.sidebar.settingsPanel.SetOpacitySliderEnabled(false);
+        }
+
         this.measureTool.SetActive(false);
     }
 
     OnModelLoaded(importResult, threeObject) {
-        console.log('OnModelLoaded called - setting model and UI state');
+        // console.log('OnModelLoaded called - setting model and UI state');
         this.model = importResult.model;
         this.parameters.fileNameDiv.innerHTML = importResult.mainFile;
         this.viewer.SetMainObject(threeObject);
@@ -316,8 +321,18 @@ export class Website {
         this.sidebar.UpdateControlsVisibility();
         this.FitModelToWindow(true);
 
+        // Enable opacity slider now that a model is loaded
+        if (this.sidebar && this.sidebar.settingsPanel && typeof this.sidebar.settingsPanel.SetOpacitySliderEnabled === 'function') {
+            this.sidebar.settingsPanel.SetOpacitySliderEnabled(true);
+        } else {
+            console.log('Failed to enable opacity slider - condition not met');
+        }
+
         // Apply URL parameters after model is loaded
         this.ApplyUrlParameters();
+
+        // Apply global opacity to the loaded model
+        this.UpdateMeshesOpacity();
 
         // Notify parent window that model is ready (if in iframe)
         if (window.self !== window.top) {
@@ -340,6 +355,8 @@ export class Website {
                 this.sidebar.settingsPanel.opacitySlider.value = Math.round(this.settings.globalOpacity * 100);
                 this.sidebar.settingsPanel.opacitySliderValue.innerHTML = Math.round(this.settings.globalOpacity * 100) + '%';
             }
+            // Apply the opacity to the meshes
+            this.UpdateMeshesOpacity();
         }
 
         // Apply selected objects from URL
@@ -757,7 +774,14 @@ export class Website {
     }
 
     UpdateMeshesOpacity() {
-        // Opacity functionality removed - keeping method signature for compatibility
+        // Only apply opacity if a model is loaded
+        if (this.model !== null && this.model !== undefined) {
+            this.viewer.SetMeshesOpacity(() => {
+                return this.settings.globalOpacity;
+            });
+        } else {
+            console.log('Model not loaded, skipping opacity update');
+        }
     }
 
     LoadModelFromUrlList(urls, settings) {
@@ -1105,6 +1129,7 @@ export class Website {
             },
             onGlobalOpacityChanged: () => {
                 this.settings.SaveToCookies();
+                this.UpdateMeshesOpacity();
             },
             onDefaultColorChanged: () => {
                 this.settings.SaveToCookies();

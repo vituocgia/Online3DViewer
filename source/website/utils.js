@@ -59,14 +59,18 @@ export function InstallTooltip (element, text)
     function CalculateOffset (element, tooltip)
     {
         let windowWidth = window.innerWidth;
+        let windowHeight = window.innerHeight;
 
         let elementOffset = element.getBoundingClientRect ();
         let elementWidth = element.offsetWidth;
         let elementHeight = element.offsetHeight;
         let tooltipWidth = tooltip.offsetWidth;
+        let tooltipHeight = tooltip.offsetHeight;
 
         let tooltipMargin = 10;
         let left = elementOffset.left + elementWidth / 2 - tooltipWidth / 2;
+
+        // Ensure tooltip doesn't go off-screen horizontally
         if (left + tooltipWidth > windowWidth - tooltipMargin) {
             left = windowWidth - tooltipWidth - tooltipMargin;
         }
@@ -74,25 +78,53 @@ export function InstallTooltip (element, text)
             left = tooltipMargin;
         }
         left = Math.max (left, 0);
+
+        // Position tooltip below the element by default
+        let top = elementOffset.top + elementHeight + tooltipMargin;
+
+        // If tooltip would go off-screen at bottom, position it above the element
+        if (top + tooltipHeight > windowHeight - tooltipMargin) {
+            top = elementOffset.top - tooltipHeight - tooltipMargin;
+        }
+
         return {
             left : left,
-            top : elementOffset.top + elementHeight + tooltipMargin
+            top : top
         };
     }
 
-    if (!IsHoverEnabled ()) {
-        return;
-    }
 
     let tooltip = null;
-    element.addEventListener ('mouseover', () => {
-        tooltip = AddDiv (document.body, 'ov_tooltip', text);
-        let offset = CalculateOffset (element, tooltip);
-        tooltip.style.left = offset.left + 'px';
-        tooltip.style.top = offset.top + 'px';
+    let showTimeout = null;
+
+        element.addEventListener ('mouseenter', () => {
+        // console.log('Tooltip mouseenter triggered for:', text);
+        // Clear any existing timeout
+        if (showTimeout) {
+            clearTimeout(showTimeout);
+        }
+
+        // Show tooltip after a short delay
+        showTimeout = setTimeout(() => {
+            // console.log('Creating tooltip for:', text);
+            tooltip = AddDiv (document.body, 'ov_tooltip', text);
+            let offset = CalculateOffset (element, tooltip);
+            tooltip.style.left = offset.left + 'px';
+            tooltip.style.top = offset.top + 'px';
+            tooltip.style.zIndex = '9999'; // Ensure tooltip is on top
+            // console.log('Tooltip created at:', offset.left, offset.top);
+        }, 300); // 300ms delay
     });
-    element.addEventListener ('mouseout', () => {
-        tooltip.remove ();
+
+    element.addEventListener ('mouseleave', () => {
+        if (showTimeout) {
+            clearTimeout(showTimeout);
+            showTimeout = null;
+        }
+        if (tooltip) {
+            tooltip.remove ();
+            tooltip = null;
+        }
     });
 }
 

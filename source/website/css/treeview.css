@@ -64,7 +64,7 @@ div.ov_tree_view div.ov_tree_item_name
 
 div.ov_tree_view div.ov_tree_item_name::after
 {
-	content: " (Ctrl+Click for multiple)";
+	content: " (Ctrl+Click)";/* (Ctrl+Click for multiple) */
 	font-size: 0.8em;
 	color: var(--ov_light_icon_color);
 	opacity: 0;

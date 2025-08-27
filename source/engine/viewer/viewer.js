@@ -494,6 +494,81 @@ export class Viewer
     SetMeshesOpacity (getOpacity)
     {
         // Opacity functionality removed - keeping method signature for compatibility
+        if (this.mainModel.mainModel.rootObject === null || this.mainModel.mainModel.rootObject === undefined) {
+            console.log('mainModel.mainModel.rootObject is null or undefined');
+            return;
+        }
+
+        let opacity = getOpacity();
+        if (opacity === null || opacity === undefined) {
+            opacity = 1.0;
+        }
+
+        //console.log('Setting global opacity to:', opacity);
+
+        let meshCount = 0;
+        let materialCount = 0;
+
+        // Apply opacity to all meshes in the scene
+        this.mainModel.mainModel.rootObject.traverse((object) => {
+            if (object.isMesh && object.material) {
+                meshCount++;
+
+                // Check if this mesh is selected (has highlight materials)
+                let isSelected = object.userData.threeMaterials !== null;
+
+                if (Array.isArray(object.material)) {
+                    // Handle multiple materials
+                    for (let material of object.material) {
+                        if (material) {
+                            materialCount++;
+                            if (isSelected) {
+                                // Keep selected objects fully opaque
+                                // console.log('Keeping selected material fully opaque:', material.name || 'unnamed');
+                                material.opacity = 1.0;
+                                material.transparent = false;
+                                material.alphaTest = 0.0;
+                                material.depthWrite = true;
+                                material.blending = THREE.NoBlending;
+                            } else {
+                                // Apply global opacity to unselected objects
+                                // console.log('Setting material opacity:', material.name || 'unnamed', 'from', material.opacity, 'to', opacity);
+                                material.opacity = opacity;
+                                material.transparent = opacity < 1.0;
+                                material.alphaTest = opacity < 1.0 ? 0.1 : 0.0;
+                                material.depthWrite = opacity >= 1.0;
+                                material.blending = opacity < 1.0 ? THREE.NormalBlending : THREE.NoBlending;
+                            }
+                            material.needsUpdate = true;
+                        }
+                    }
+                } else {
+                    // Handle single material
+                    materialCount++;
+                    if (isSelected) {
+                        // Keep selected objects fully opaque
+                        // console.log('Keeping selected material fully opaque:', object.material.name || 'unnamed');
+                        object.material.opacity = 1.0;
+                        object.material.transparent = false;
+                        object.material.alphaTest = 0.0;
+                        object.material.depthWrite = true;
+                        object.material.blending = THREE.NoBlending;
+                    } else {
+                        // Apply global opacity to unselected objects
+                        // console.log('Setting material opacity:', object.material.name || 'unnamed', 'from', object.material.opacity, 'to', opacity);
+                        object.material.opacity = opacity;
+                        object.material.transparent = opacity < 1.0;
+                        object.material.alphaTest = opacity < 1.0 ? 0.1 : 0.0;
+                        object.material.depthWrite = opacity >= 1.0;
+                        object.material.blending = opacity < 1.0 ? THREE.NormalBlending : THREE.NoBlending;
+                    }
+                    object.material.needsUpdate = true;
+                }
+            }
+        });
+
+        // console.log('Updated opacity for', meshCount, 'meshes and', materialCount, 'materials');
+        this.Render();
     }
 
     GetMeshUserDataUnderMouse (intersectionMode, mouseCoords)

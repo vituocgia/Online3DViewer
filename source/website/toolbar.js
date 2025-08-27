@@ -16,6 +16,7 @@ export class ToolbarButton
         }
 
         this.buttonDiv.setAttribute ('alt', this.imageTitle);
+        this.buttonDiv.setAttribute ('title', this.imageTitle);
         InstallTooltip (this.buttonDiv, this.imageTitle);
     }
 
