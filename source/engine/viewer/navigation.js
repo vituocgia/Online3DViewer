@@ -422,7 +422,7 @@ export class Navigation
 
 		if (this.clickDetector.IsClick ()) {
 			let mouseCoords = this.mouse.GetPosition ();
-			this.Click (ev.which, mouseCoords);
+			this.Click (ev.which, mouseCoords, ev);
 		}
 	}
 
@@ -484,7 +484,7 @@ export class Navigation
 		if (this.clickDetector.IsClick ()) {
 			let touchCoords = this.touch.GetPosition ();
 			if (this.touch.GetFingerCount () === 1) {
-				this.Click (1, touchCoords);
+				this.Click (1, touchCoords, null);
 			}
 		}
 	}
@@ -563,10 +563,10 @@ export class Navigation
 		this.callbacks.onUpdate ();
 	}
 
-	Click (button, mouseCoords)
+	Click (button, mouseCoords, event)
 	{
 		if (this.onMouseClick) {
-			this.onMouseClick (button, mouseCoords);
+			this.onMouseClick (button, mouseCoords, event);
 		}
 	}
 

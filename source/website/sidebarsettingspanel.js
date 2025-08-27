@@ -1,7 +1,7 @@
 import { RGBColor, RGBColorToHexString, RGBAColor, RGBAColorToHexString, ColorComponentFromFloat } from '../engine/model/color.js';
 import { AddDiv, AddDomElement, ShowDomElement, SetDomElementOuterHeight } from '../engine/viewer/domutils.js';
 import { AddRangeSlider, AddToggle, AddCheckbox } from '../website/utils.js';
-import { CalculatePopupPositionToElementTopLeft } from './dialogs.js';
+import { CalculatePopupPositionToElementTopLeft, CalculatePopupPositionToElementTopLeftAdaptive } from './dialogs.js';
 import { PopupDialog } from './dialog.js';
 import { Settings } from './settings.js';
 import { SidebarPanel } from './sidebarpanel.js';
@@ -60,7 +60,7 @@ class EnvironmentMapPopup extends PopupDialog
     ShowPopup (buttonDiv, shadingType, settings, callbacks)
     {
         let contentDiv = super.Init (() => {
-            return CalculatePopupPositionToElementTopLeft (buttonDiv, contentDiv);
+            return CalculatePopupPositionToElementTopLeftAdaptive (buttonDiv, contentDiv);
         });
 
         let envMapImages = [
@@ -315,6 +315,32 @@ class SettingsModelDisplaySection extends SettingsSection
             this.callbacks.onHighlightColorChanged ();
         });
         AddDiv (highlightColorRow, null, Loc ('Selection Highlight Color'));
+
+        // Global Opacity Control
+        let opacityDiv = AddDiv (this.contentDiv, 'ov_sidebar_parameter');
+        AddDiv (opacityDiv, null, 'Global Opacity');
+        let opacityRow = AddDiv (opacityDiv, 'ov_sidebar_settings_row large');
+        this.opacitySlider = AddRangeSlider (opacityRow, 0, 100);
+        this.opacitySlider.setAttribute ('title', 'Global Opacity');
+        this.opacitySliderValue = AddDomElement (opacityRow, 'span', 'ov_slider_label');
+        this.opacitySlider.addEventListener ('input', () => {
+            this.opacitySliderValue.innerHTML = this.opacitySlider.value + '%';
+        });
+        this.opacitySlider.addEventListener ('change', () => {
+            // console.log('Opacity slider changed to:', this.opacitySlider.value);
+            this.settings.globalOpacity = this.opacitySlider.value / 100.0;
+            this.settings.SaveToCookies ();
+            // console.log('Calling onGlobalOpacityChanged callback...');
+            if (this.callbacks && this.callbacks.onGlobalOpacityChanged) {
+                this.callbacks.onGlobalOpacityChanged ();
+            } else {
+                console.error('onGlobalOpacityChanged callback is not available!');
+                // console.log('Available callbacks:', Object.keys(this.callbacks || {}));
+            }
+        });
+        this.opacitySlider.value = Math.round (this.settings.globalOpacity * 100);
+        this.opacitySliderValue.innerHTML = Math.round (this.settings.globalOpacity * 100) + '%';
+        // console.log('Opacity slider initialized with value:', this.opacitySlider.value, 'from settings:', this.settings.globalOpacity);
     }
 
     UpdateEnvironmentMap ()
@@ -359,6 +385,13 @@ class SettingsModelDisplaySection extends SettingsSection
 
         if (this.highlightColorPicker !== null) {
             this.highlightColorPicker.setColor ('#' + RGBAColorToHexString (this.settings.highlightColor || new RGBAColor (100, 150, 255, 200)));
+        }
+
+        // Update opacity slider
+        if (this.opacitySlider !== null) {
+            this.opacitySlider.value = Math.round (this.settings.globalOpacity * 100);
+            this.opacitySliderValue.innerHTML = Math.round (this.settings.globalOpacity * 100) + '%';
+            // console.log('Updated opacity slider to:', this.opacitySlider.value, '%');
         }
     }
 
@@ -510,7 +543,8 @@ export class SidebarSettingsPanel extends SidebarPanel
 
     Init (callbacks)
     {
-        super.Init (callbacks);
+        this.callbacks = callbacks;
+        // console.log('SidebarSettingsPanel Init called with callbacks:', Object.keys(callbacks || {}));
 
         this.modelDisplaySection.Init ({
             getShadingType : () => {
@@ -536,6 +570,9 @@ export class SidebarSettingsPanel extends SidebarPanel
             },
             onHighlightColorChanged : () => {
                 this.callbacks.onHighlightColorChanged ();
+            },
+            onGlobalOpacityChanged : () => {
+                this.callbacks.onGlobalOpacityChanged ();
             }
         });
         this.importParametersSection.Init ({
@@ -546,6 +583,9 @@ export class SidebarSettingsPanel extends SidebarPanel
                 this.callbacks.onDefaultColorChanged ();
             }
         });
+
+        this.UpdateControlsStatus ();
+        this.UpdateControlsVisibility ();
     }
 
     UpdateControlsStatus ()

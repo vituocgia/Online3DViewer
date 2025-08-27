@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Parent Window - 3D Viewer Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .viewer-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .selection-info {
+            background: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .selection-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .selection-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .selection-item:last-child {
+            border-bottom: none;
+        }
+        .no-selection {
+            color: #666;
+            font-style: italic;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>3D Viewer Integration Example</h1>
+        <p>This page demonstrates how to receive selected objects from the 3D viewer iframe.</p>
+
+        <div class="controls">
+            <button onclick="requestSelection()">Request Current Selection</button>
+            <button onclick="clearSelection()">Clear Selection Display</button>
+            <span class="status" id="status">Ready</span>
+        </div>
+
+        <div class="selection-info">
+            <h3>Selected Objects (<span id="selection-count">0</span>)</h3>
+            <div class="selection-list" id="selection-list">
+                <div class="no-selection">No objects selected</div>
+            </div>
+        </div>
+
+        <div class="viewer-container">
+            <iframe src="../website/index.html#model=assets/models/3DModel.glb"
+                    id="viewer-iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let lastSelection = [];
+
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            // Verify the message is from our iframe (optional security measure)
+            if (event.source !== document.getElementById('viewer-iframe').contentWindow) {
+                return;
+            }
+
+            // Handle different message types
+            if (event.data.type === '3dviewer_selection_changed') {
+                handleSelectionChanged(event.data);
+            }
+        });
+
+        function handleSelectionChanged(data) {
+            console.log('Selection changed:', data);
+
+            lastSelection = data.selectedObjects || [];
+            updateSelectionDisplay();
+
+            // Update status
+            document.getElementById('status').textContent =
+                `Selection updated: ${data.selectedCount} objects`;
+
+            // You can add your custom logic here
+            // For example, send the selection to your backend API
+            // sendToBackend(data.selectedObjects);
+        }
+
+        function updateSelectionDisplay() {
+            const countElement = document.getElementById('selection-count');
+            const listElement = document.getElementById('selection-list');
+
+            countElement.textContent = lastSelection.length;
+
+            if (lastSelection.length === 0) {
+                listElement.innerHTML = '<div class="no-selection">No objects selected</div>';
+            } else {
+                listElement.innerHTML = lastSelection.map(obj =>
+                    `<div class="selection-item">${obj}</div>`
+                ).join('');
+            }
+        }
+
+        function requestSelection() {
+            // Send a message to the iframe requesting current selection
+            const iframe = document.getElementById('viewer-iframe');
+            iframe.contentWindow.postMessage({
+                type: 'request_selection'
+            }, '*');
+
+            document.getElementById('status').textContent = 'Requested selection from viewer';
+        }
+
+        function clearSelection() {
+            lastSelection = [];
+            updateSelectionDisplay();
+            document.getElementById('status').textContent = 'Selection display cleared';
+        }
+
+        // Example function to send selection to backend
+        function sendToBackend(selectedObjects) {
+            // This is where you would send the selection to your backend
+            console.log('Sending to backend:', selectedObjects);
+
+            // Example API call:
+            /*
+            fetch('/api/selection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selectedObjects: selectedObjects,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Backend response:', data))
+            .catch(error => console.error('Error:', error));
+            */
+        }
+
+        // Optional: Handle iframe load
+        document.getElementById('viewer-iframe').addEventListener('load', function() {
+            console.log('3D Viewer iframe loaded');
+            document.getElementById('status').textContent = 'Viewer loaded and ready';
+        });
+    </script>
+</body>
+</html>

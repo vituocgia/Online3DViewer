@@ -136,6 +136,12 @@ export class ThreeMaterialHandler
 		}
 	}
 
+	ClearMaterialCache ()
+	{
+		this.modelToThreeMaterial.clear ();
+		this.modelToThreeLineMaterial.clear ();
+	}
+
 	CreateThreeFaceMaterial (materialIndex)
 	{
 		let material = this.model.GetMaterial (materialIndex);
@@ -150,7 +156,9 @@ export class ThreeMaterialHandler
 			opacity : material.opacity,
 			transparent : material.transparent,
 			alphaTest : material.alphaTest,
-			side : THREE.DoubleSide
+			side : THREE.DoubleSide,
+			blending : material.transparent ? THREE.NormalBlending : THREE.NoBlending,
+			depthWrite : !material.transparent
 		};
 
 		if (this.conversionParams.forceMediumpForMaterials) {
@@ -218,7 +226,10 @@ export class ThreeMaterialHandler
 		let baseColor = ConvertColorToThreeColor (material.color);
 		let materialParams = {
 			color : baseColor,
-			opacity : material.opacity
+			opacity : material.opacity,
+			transparent : material.transparent,
+			blending : material.transparent ? THREE.NormalBlending : THREE.NoBlending,
+			depthWrite : !material.transparent
 		};
 
 		if (this.conversionParams.forceMediumpForMaterials) {

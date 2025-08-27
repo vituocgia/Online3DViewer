@@ -4,17 +4,57 @@
 <head>
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no">
-
-	<title>Online 3D Viewer</title>
-
+    <title>Online 3D Viewer</title>
 </head>
 
 <body>
-    <iframe
-        src="../../website#model=assets/models/solids.obj,assets/models/solids.mtl"
-        width="640" height="480"
-        style="border:1px solid #eeeeee;">
+    <iframe src="../../website/index.html"
+            width="100%" height="100%"
+            style="border: none; width: 100%; height: 100vh;">
     </iframe>
+
+        <script>
+                // Handle URL parameters and pass them to the iframe
+        window.addEventListener('load', function() {
+            const iframe = document.querySelector('iframe');
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Build the URL with parameters
+            let url = '../../website/index.html';
+            const params = [];
+
+            // Add model parameter if present
+            const modelUrl = urlParams.get('model');
+            if (modelUrl) {
+                // Don't encode the model URL - pass it as is
+                params.push(`model=${modelUrl}`);
+            }
+
+            // Add selected objects parameter if present
+            const selectedParam = urlParams.get('selected');
+            if (selectedParam) {
+                // Don't encode the selected parameter - pass it as is
+                params.push(`selected-objects=${selectedParam}`);
+            }
+
+            // Add parameters to URL
+            if (params.length > 0) {
+                url += '#' + params.join('$');
+            }
+
+            console.log('Setting iframe src to:', url);
+            // Set iframe source
+            iframe.src = url;
+        });
+
+        // Listen for messages from the iframe and forward them to parent
+        window.addEventListener('message', function(event) {
+            // Forward messages to parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage(event.data, '*');
+            }
+        });
+    </script>
 </body>
 
 </html>

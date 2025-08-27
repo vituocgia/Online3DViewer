@@ -317,6 +317,28 @@ export class Navigator
         this.OnSelectionChanged();
     }
 
+    SetMultipleSelections (selections)
+    {
+        // console.log('=== SetMultipleSelections called ===');
+        // console.log('Input selections count:', selections ? selections.length : 0);
+
+        // Clear current selection and set multiple selections
+        this.selection.Clear();
+
+        if (selections !== null && selections.length > 0) {
+            // console.log('Adding', selections.length, 'selections');
+            for (let selection of selections) {
+                this.selection.AddSelection(selection);
+            }
+        }
+
+        // console.log('Final selected mesh IDs:', this.selection.GetMeshSelections());
+
+        this.UpdateSelectionUI();
+        this.OnSelectionChanged();
+        // console.log('=== End SetMultipleSelections ===');
+    }
+
     UpdateSelectionUI ()
     {
         // Update material panel selections

@@ -84,12 +84,13 @@ div.ov_sidebar_content div.ov_sidebar_settings_row
 
 div.ov_sidebar_content div.ov_sidebar_settings_row input.ov_slider
 {
-	width: 80%;
+	width: 70%;
 }
 
 div.ov_sidebar_content div.ov_sidebar_settings_row.large
 {
 	height: 25px;
+	overflow: visible;
 }
 
 div.ov_sidebar_content div.ov_sidebar_settings_padded

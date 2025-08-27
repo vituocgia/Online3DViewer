@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Opacity Test</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .test-container { margin-bottom: 20px; }
+        .slider { width: 200px; }
+        .value { margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Opacity Test</h1>
+
+    <div class="test-container">
+        <label>Opacity Slider: </label>
+        <input type="range" id="opacitySlider" class="slider" min="0" max="100" value="100">
+        <span id="opacityValue" class="value">100%</span>
+    </div>
+
+    <div class="test-container">
+        <button id="testButton">Test Opacity Change</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script>
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+        const testButton = document.getElementById('testButton');
+        const output = document.getElementById('output');
+
+        // Test opacity conversion
+        function testOpacityConversion() {
+            const sliderValue = parseInt(opacitySlider.value);
+            const opacity = sliderValue / 100.0;
+
+            output.innerHTML = `
+                <h3>Opacity Test Results:</h3>
+                <p>Slider Value: ${sliderValue}</p>
+                <p>Opacity (0-1): ${opacity}</p>
+                <p>Transparent: ${opacity < 1.0}</p>
+                <p>needsUpdate: true (should be set when opacity changes)</p>
+            `;
+        }
+
+        opacitySlider.addEventListener('input', () => {
+            opacityValue.textContent = opacitySlider.value + '%';
+            testOpacityConversion();
+        });
+
+        testButton.addEventListener('click', () => {
+            // Simulate opacity change
+            const testValues = [100, 75, 50, 25, 0];
+            let index = 0;
+
+            const interval = setInterval(() => {
+                if (index < testValues.length) {
+                    opacitySlider.value = testValues[index];
+                    opacityValue.textContent = testValues[index] + '%';
+                    testOpacityConversion();
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        });
+
+        // Initial test
+        testOpacityConversion();
+    </script>
+</body>
+</html>

@@ -65,6 +65,9 @@ export class Sidebar
             },
             onHighlightColorChanged : () => {
                 this.callbacks.onHighlightColorChanged ();
+            },
+            onGlobalOpacityChanged : () => {
+                this.callbacks.onGlobalOpacityChanged ();
             }
         });
     }

@@ -63,6 +63,29 @@ export function CalculatePopupPositionToElementTopLeft (elementDiv, contentDiv)
     };
 }
 
+export function CalculatePopupPositionToElementTopLeftAdaptive (elementDiv, contentDiv)
+{
+    let offset = elementDiv.getBoundingClientRect ();
+    let windowWidth = window.innerWidth;
+
+    // Check if the element is in the left half of the screen (sidebar is on left)
+    let isLeftSide = offset.left < windowWidth / 2;
+
+    if (isLeftSide) {
+        // If sidebar is on left, position popup to the right of the element
+        return {
+            x : offset.left + elementDiv.offsetWidth,
+            y : offset.top
+        };
+    } else {
+        // If sidebar is on right, position popup to the left of the element (original behavior)
+        return {
+            x : offset.left - contentDiv.offsetWidth,
+            y : offset.top
+        };
+    }
+}
+
 export function CalculatePopupPositionToElementBottomRight (elementDiv, contentDiv)
 {
     let offset = elementDiv.getBoundingClientRect ();

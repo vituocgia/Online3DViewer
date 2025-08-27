@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>3D Viewer Modal Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            background: #0056b3;
+        }
+
+        .button.secondary {
+            background: #6c757d;
+        }
+
+        .button.secondary:hover {
+            background: #545b62;
+        }
+
+        .selection-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            min-height: 50px;
+        }
+
+        .selection-item {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 2px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            height: 90%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-container {
+            flex: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .viewer-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .preselection-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>3D Viewer Modal Demo</h1>
+        <p>This demo shows how to open the 3D viewer in a modal with preselected objects and receive selections back.
+        </p>
+        <p><strong>Features:</strong> URL encoding for special characters, postMessage for large object arrays (avoids
+            HTTP 431 errors), and real-time selection updates.</p>
+
+        <div class="demo-section">
+            <h3>Preselection Setup</h3>
+            <div class="input-group">
+                <label for="preselectionInput">Preselected Objects (comma-separated):</label>
+                <input type="text" id="preselectionInput" class="preselection-input"
+                    placeholder="e.g., Object1, Object2, Object3" value="Cube, Sphere">
+                <div style="margin-top: 5px;">
+                    <button type="button" class="button" style="font-size: 12px; padding: 5px 10px;"
+                        onclick="setPreselection('Cube, Sphere')">Demo Objects</button>
+                    <button type="button" class="button" style="font-size: 12px; padding: 5px 10px;"
+                        onclick="setPreselection('AT004138022,EFEM.001,AT004137982')">Sample Objects</button>
+                    <button type="button" class="button" style="font-size: 12px; padding: 5px 10px;"
+                        onclick="setPreselection('AT004956200 %1')">Special Chars</button>
+                    <button type="button" class="button" style="font-size: 12px; padding: 5px 10px;"
+                        onclick="clearPreselection()">Clear</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="modelUrlInput">3D Model URL (optional):</label>
+                <input type="text" id="modelUrlInput" class="preselection-input"
+                    placeholder="e.g., assets/models/3DModel.glb or leave empty for default"
+                    value="assets/models/3DModel.glb">
+            </div>
+            <button class="button" onclick="openViewerModal()">Open 3D Viewer Modal</button>
+
+            <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 12px;">
+                <strong>Examples:</strong><br>
+                • Local model: <code>assets/models/3DModel.glb</code><br>
+                • External model:
+                <code>https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf</code><br>
+                • Object names: <code>AT004138022,EFEM.001,AT004137982</code><br>
+                • Special characters: <code>AT004956200 %1</code> (will be encoded as
+                <code>AT004956200%20%251</code>)<br>
+                • Leave empty to use default demo model
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>Current Selection from Modal</h3>
+            <div id="currentSelection" class="selection-display">
+                <em>No objects selected yet. Open the modal and select objects in the 3D viewer.</em>
+            </div>
+            <div style="margin-top: 10px;">
+                <button class="button secondary" onclick="clearSelection()">Clear Selection</button>
+                <button class="button" onclick="addSelectionToPreselection()">Add to Preselection</button>
+                <button class="button" onclick="replacePreselectionWithSelection()">Replace Preselection</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>Selection History</h3>
+            <div id="selectionHistory" class="selection-display">
+                <em>Selection history will appear here...</em>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="viewerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">3D Viewer</div>
+                <button class="close" onclick="closeViewerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="viewer-container">
+                    <iframe id="viewerIframe" class="viewer-iframe" src="../website/"></iframe>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="status" id="modalStatus">Ready</div>
+                <div>
+                    <button class="button" onclick="requestSelection()">Get Current Selection</button>
+                    <button class="button secondary" onclick="closeViewerModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSelection = [];
+        let selectionHistory = [];
+
+        // Open the 3D viewer modal
+        function openViewerModal() {
+            const modal = document.getElementById('viewerModal');
+            const iframe = document.getElementById('viewerIframe');
+            const preselectionInput = document.getElementById('preselectionInput');
+            const modelUrlInput = document.getElementById('modelUrlInput');
+
+            // Get preselected objects
+            const preselectedObjects = preselectionInput.value
+                .split(',')
+                .map(obj => obj.trim())
+                .filter(obj => obj.length > 0);
+
+            // Build URL with parameters
+            let url = '../website/';
+            const params = [];
+
+            if (modelUrlInput.value.trim()) {
+                // Don't encode here - let the website handle encoding
+                params.push(`model=${modelUrlInput.value.trim()}`);
+            }
+
+            if (preselectedObjects.length > 0) {
+                // Encode the selected objects properly for URL
+                const encodedObjects = preselectedObjects.map(obj => encodeURIComponent(obj));
+                params.push(`selected-objects=${encodedObjects.join(',')}`);
+            }
+
+            if (params.length > 0) {
+                url += '#' + params.join('$');
+            }
+
+            // Set iframe source
+            iframe.src = url;
+
+            // Show modal
+            modal.style.display = 'block';
+
+            // Listen for messages from iframe
+            window.addEventListener('message', handleIframeMessage);
+
+            updateModalStatus('Loading 3D viewer...');
+
+            // Store preselected objects for later use
+            window.preselectedObjectsForViewer = preselectedObjects;
+        }
+
+        // Close the modal
+        function closeViewerModal() {
+            const modal = document.getElementById('viewerModal');
+            modal.style.display = 'none';
+
+            // Remove message listener
+            window.removeEventListener('message', handleIframeMessage);
+
+            updateModalStatus('Ready');
+        }
+
+        // Handle messages from the iframe
+        function handleIframeMessage(event) {
+            if (event.data.type === '3dviewer_selection_changed') {
+                currentSelection = event.data.selectedObjects || [];
+                updateSelectionDisplay();
+                updateModalStatus(`Selected: ${currentSelection.length} objects`);
+
+                // Add to history
+                if (currentSelection.length > 0) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    selectionHistory.unshift({
+                        timestamp: timestamp,
+                        objects: [...currentSelection]
+                    });
+
+                    // Keep only last 10 selections
+                    if (selectionHistory.length > 10) {
+                        selectionHistory = selectionHistory.slice(0, 10);
+                    }
+
+                    updateSelectionHistory();
+                }
+            } else if (event.data.type === '3dviewer_loaded') {
+                updateModalStatus('3D viewer loaded successfully');
+
+                // Send preselected objects via postMessage to avoid URL length limits
+                if (window.preselectedObjectsForViewer && window.preselectedObjectsForViewer.length > 0) {
+                    const iframe = document.getElementById('viewerIframe');
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'set_preselected_objects',
+                            selectedObjects: window.preselectedObjectsForViewer
+                        }, '*');
+                        updateModalStatus(`Sent ${window.preselectedObjectsForViewer.length} preselected objects`);
+                    }
+                }
+            } else if (event.data.type === '3dviewer_error') {
+                updateModalStatus('Error: ' + event.data.message);
+            }
+        }
+
+        // Request current selection from iframe
+        function requestSelection() {
+            const iframe = document.getElementById('viewerIframe');
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'request_selection'
+                }, '*');
+                updateModalStatus('Requesting selection...');
+            }
+        }
+
+        // Update the selection display
+        function updateSelectionDisplay() {
+            const display = document.getElementById('currentSelection');
+
+            if (currentSelection.length === 0) {
+                display.innerHTML = '<em>No objects selected</em>';
+            } else {
+                display.innerHTML = currentSelection.map(obj =>
+                    `<span class="selection-item">${obj}</span>`
+                ).join('');
+            }
+        }
+
+        // Update selection history
+        function updateSelectionHistory() {
+            const history = document.getElementById('selectionHistory');
+
+            if (selectionHistory.length === 0) {
+                history.innerHTML = '<em>No selection history</em>';
+                return;
+            }
+
+            history.innerHTML = selectionHistory.map(entry => `
+                <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px;">
+                    <strong>${entry.timestamp}</strong>:
+                    ${entry.objects.map(obj => `<span class="selection-item">${obj}</span>`).join('')}
+                </div>
+            `).join('');
+        }
+
+        // Clear current selection
+        function clearSelection() {
+            currentSelection = [];
+            updateSelectionDisplay();
+            updateModalStatus('Selection cleared');
+        }
+
+        // Update modal status
+        function updateModalStatus(message) {
+            const status = document.getElementById('modalStatus');
+            status.textContent = message;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('viewerModal');
+            if (event.target === modal) {
+                closeViewerModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeViewerModal();
+            }
+        });
+
+        // Quick selection functions
+        function setPreselection(objects) {
+            document.getElementById('preselectionInput').value = objects;
+        }
+
+        function clearPreselection() {
+            document.getElementById('preselectionInput').value = '';
+        }
+
+        // Add current selection to preselection
+        function addSelectionToPreselection() {
+            if (currentSelection.length === 0) {
+                alert('No objects selected. Please select objects in the 3D viewer first.');
+                return;
+            }
+
+            const preselectionInput = document.getElementById('preselectionInput');
+            const currentPreselection = preselectionInput.value.trim();
+            const newObjects = currentSelection.join(', ');
+
+            if (currentPreselection === '') {
+                // If preselection is empty, just set it to current selection
+                preselectionInput.value = newObjects;
+            } else {
+                // If preselection has content, append the new objects
+                preselectionInput.value = currentPreselection + ', ' + newObjects;
+            }
+
+            updateModalStatus(`Added ${currentSelection.length} objects to preselection`);
+        }
+
+        // Replace preselection with current selection
+        function replacePreselectionWithSelection() {
+            if (currentSelection.length === 0) {
+                alert('No objects selected. Please select objects in the 3D viewer first.');
+                return;
+            }
+
+            const preselectionInput = document.getElementById('preselectionInput');
+            preselectionInput.value = currentSelection.join(', ');
+            updateModalStatus(`Replaced preselection with ${currentSelection.length} objects`);
+        }
+    </script>
+</body>
+
+</html>

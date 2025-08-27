@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>PostMessage Large Arrays Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background: #0056b3;
+        }
+
+        .button.secondary {
+            background: #6c757d;
+        }
+
+        .button.secondary:hover {
+            background: #545b62;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .input-group textarea {
+            height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .object-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .object-count {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .comparison-item h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .url-display {
+            word-break: break-all;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            border: 1px solid #ddd;
+        }
+
+        .iframe-container {
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            margin: 20px 0;
+            height: 600px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>PostMessage Large Arrays Demo</h1>
+        <p>This demo shows how to use postMessage for large object arrays instead of URL parameters to avoid HTTP 431
+            errors.</p>
+
+        <div class="demo-section">
+            <h3>Generate Large Object Array</h3>
+            <div class="input-group">
+                <label for="objectCount">Number of Objects to Generate:</label>
+                <input type="number" id="objectCount" value="1000" min="1" max="10000">
+            </div>
+            <div class="input-group">
+                <label for="objectPrefix">Object Name Prefix:</label>
+                <input type="text" id="objectPrefix" value="AT" placeholder="e.g., AT, EFEM, CT">
+            </div>
+            <button class="button" onclick="generateLargeArray()">Generate Large Array</button>
+            <button class="button secondary" onclick="generateSampleArray()">Generate Sample Array</button>
+            <button class="button secondary" onclick="clearArray()">Clear Array</button>
+        </div>
+
+        <div class="demo-section">
+            <h3>Current Object Array</h3>
+            <div id="arrayInfo" class="object-count">No objects generated yet</div>
+            <div id="objectList" class="object-list" style="display: none;"></div>
+        </div>
+
+        <div class="comparison">
+            <div class="comparison-item">
+                <h4>❌ URL Parameters Method (Problematic)</h4>
+                <p>This method can cause HTTP 431 errors with large arrays:</p>
+                <div id="urlMethod" class="url-display">No URL generated yet</div>
+                <div id="urlLength" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+            <div class="comparison-item">
+                <h4>✅ PostMessage Method (Recommended)</h4>
+                <p>This method avoids HTTP 431 errors and is more efficient:</p>
+                <div id="postMessageMethod" class="url-display">No postMessage data generated yet</div>
+                <div id="postMessageLength" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>Test with 3D Viewer</h3>
+            <p>Click the button below to open the 3D viewer with the current object array using postMessage:</p>
+            <button class="button" onclick="openViewerWithPostMessage()">Open 3D Viewer with PostMessage</button>
+            <button class="button secondary" onclick="openViewerWithURL()">Open 3D Viewer with URL (for
+                comparison)</button>
+        </div>
+
+        <div id="viewerContainer" class="iframe-container" style="display: none;">
+            <iframe id="viewerIframe" src=""></iframe>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div class="demo-section">
+            <h3>Received Selections from 3D Viewer</h3>
+            <div id="receivedSelections" class="object-list">
+                <em>No selections received yet. Open the 3D viewer and select objects.</em>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentObjectArray = [];
+        let receivedSelections = [];
+        let iframeReady = false;
+
+        // Generate a large array of objects
+        function generateLargeArray() {
+            const count = parseInt(document.getElementById('objectCount').value);
+            const prefix = document.getElementById('objectPrefix').value || 'AT';
+
+            currentObjectArray = [];
+            for (let i = 1; i <= count; i++) {
+                // Generate realistic object names with some special characters
+                const randomSuffix = Math.random() > 0.8 ? ' %' + Math.floor(Math.random() * 10) : '';
+                const randomSuffix2 = Math.random() > 0.9 ? ' &' + Math.floor(Math.random() * 100) : '';
+                currentObjectArray.push(`${prefix}${String(i).padStart(6, '0')}${randomSuffix}${randomSuffix2}`);
+            }
+
+            updateArrayDisplay();
+            updateComparison();
+            showStatus(`Generated ${count} objects with prefix "${prefix}"`, 'success');
+        }
+
+        // Generate a sample array for testing
+        function generateSampleArray() {
+            currentObjectArray = [
+                "AT004132451",
+                "AT004956200 %1",
+                "AT005823385",
+                "AT004127433",
+                "CT000316580 %3",
+                "CT000648338 %2",
+                "AT004137982",
+                "AT004138022",
+                "AT004138032",
+                "AT004138110",
+                "Mesh_1.054",
+                "Mesh_1.100",
+                "Mesh_4",
+                "Mesh_5.009",
+                "Mesh_6",
+                "Mesh_7",
+                "EFEM.001"
+            ];
+
+            updateArrayDisplay();
+            updateComparison();
+            showStatus('Generated sample array with 17 objects', 'success');
+        }
+
+        // Clear the current array
+        function clearArray() {
+            currentObjectArray = [];
+            updateArrayDisplay();
+            updateComparison();
+            showStatus('Array cleared', 'info');
+        }
+
+        // Update the array display
+        function updateArrayDisplay() {
+            const arrayInfo = document.getElementById('arrayInfo');
+            const objectList = document.getElementById('objectList');
+
+            if (currentObjectArray.length === 0) {
+                arrayInfo.textContent = 'No objects generated yet';
+                objectList.style.display = 'none';
+                return;
+            }
+
+            arrayInfo.textContent = `${currentObjectArray.length} objects generated`;
+            objectList.style.display = 'block';
+
+            // Show first 20 objects and indicate if there are more
+            const displayCount = Math.min(20, currentObjectArray.length);
+            const displayText = currentObjectArray.slice(0, displayCount).join('\n');
+            const moreText = currentObjectArray.length > 20 ? `\n... and ${currentObjectArray.length - 20} more objects` : '';
+            objectList.textContent = displayText + moreText;
+        }
+
+        // Update the comparison display
+        function updateComparison() {
+            if (currentObjectArray.length === 0) {
+                document.getElementById('urlMethod').textContent = 'No URL generated yet';
+                document.getElementById('postMessageMethod').textContent = 'No postMessage data generated yet';
+                document.getElementById('urlLength').textContent = '';
+                document.getElementById('postMessageLength').textContent = '';
+                return;
+            }
+
+            // URL Method (problematic) - includes objects in URL
+            const urlParams = new URLSearchParams();
+            urlParams.set('model', 'assets/models/3DModel.glb');
+            urlParams.set('selected-objects', currentObjectArray.join(','));
+            const urlString = `../website/index.html#${urlParams.toString()}`;
+            document.getElementById('urlMethod').textContent = urlString;
+            document.getElementById('urlLength').textContent = `URL Length: ${urlString.length} characters`;
+
+            // PostMessage Method (recommended) - objects sent separately
+            const postMessageData = {
+                type: 'set_preselected_objects',
+                selectedObjects: currentObjectArray
+            };
+            const postMessageString = JSON.stringify(postMessageData, null, 2);
+            document.getElementById('postMessageMethod').textContent = `URL: ../website/index.html#model=assets/models/3DModel.glb\n\nPostMessage Data:\n${postMessageString}`;
+            document.getElementById('postMessageLength').textContent = `URL Length: 67 chars + PostMessage: ${postMessageString.length} chars`;
+        }
+
+        // Open 3D viewer with postMessage
+        function openViewerWithPostMessage() {
+            if (currentObjectArray.length === 0) {
+                showStatus('Please generate an object array first', 'error');
+                return;
+            }
+
+            const iframe = document.getElementById('viewerIframe');
+            const container = document.getElementById('viewerContainer');
+
+            // Load the 3D viewer with ONLY the model (NO URL parameters for objects)
+            let url = '../website/#model=assets/models/3DModel.glb';
+
+            iframeReady = false; // Reset ready flag
+            iframe.src = url;
+            container.style.display = 'block';
+        }
+
+        // Open 3D viewer with URL (for comparison - may fail with large arrays)
+        function openViewerWithURL() {
+            if (currentObjectArray.length === 0) {
+                showStatus('Please generate an object array first', 'error');
+                return;
+            }
+
+            const iframe = document.getElementById('viewerIframe');
+            const container = document.getElementById('viewerContainer');
+
+            // Create URL with parameters (may cause HTTP 431 with large arrays)
+            let url = '../website/';
+            const params = [];
+
+            // Add model parameter
+            params.push('model=assets/models/3DModel.glb');
+
+            // Add selected objects parameter (encoded)
+            if (currentObjectArray.length > 0) {
+                const encodedObjects = currentObjectArray.map(obj => encodeURIComponent(obj));
+                params.push(`selected-objects=${encodedObjects.join(',')}`);
+            }
+
+            // Build URL with hash parameters
+            if (params.length > 0) {
+                url += '#' + params.join('$');
+            }
+
+            iframe.src = url;
+            container.style.display = 'block';
+
+            showStatus(`Loading with URL parameters (may fail with large arrays)`, 'info');
+        }
+
+        // Handle messages from the iframe
+        function handleIframeMessage(event) {
+            console.log('Received message from iframe:', event.data);
+
+            if (event.data.type === '3dviewer_selection_changed') {
+                receivedSelections = event.data.selectedObjects || [];
+                updateReceivedSelections();
+                showStatus(`Received ${receivedSelections.length} selected objects from 3D viewer`, 'success');
+            } else if (event.data.type === 'iframe_ready') {
+                console.log('Received iframe_ready message, sending preselected objects immediately...');
+                // 3D viewer is ready, send the preselected objects immediately
+                iframeReady = true;
+                const iframe = document.getElementById('viewerIframe');
+                const postMessageData = {
+                    type: 'set_preselected_objects',
+                    selectedObjects: currentObjectArray
+                };
+
+                iframe.contentWindow.postMessage(postMessageData, '*');
+                showStatus(`Sent ${currentObjectArray.length} objects via postMessage (iframe ready)`, 'success');
+            }
+        }
+
+        // Update the received selections display
+        function updateReceivedSelections() {
+            const container = document.getElementById('receivedSelections');
+
+            if (receivedSelections.length === 0) {
+                container.innerHTML = '<em>No selections received yet. Open the 3D viewer and select objects.</em>';
+                return;
+            }
+
+            const displayCount = Math.min(20, receivedSelections.length);
+            const displayText = receivedSelections.slice(0, displayCount).join('\n');
+            const moreText = receivedSelections.length > 20 ? `\n... and ${receivedSelections.length - 20} more objects` : '';
+            container.textContent = displayText + moreText;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+
+            // Hide after 5 seconds
+            // setTimeout(() => {
+            //     status.style.display = 'none';
+            // }, 5000);
+        }
+
+        // Initialize with sample data
+        window.onload = function () {
+            generateSampleArray();
+
+            // Set up message listener once
+            window.addEventListener('message', handleIframeMessage);
+        };
+    </script>
+</body>
+
+</html>

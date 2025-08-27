@@ -44,7 +44,8 @@ export function ShowSharingDialog (fileList, settings, viewer)
             let builder = CreateUrlBuilder ();
             builder.AddModelUrls (modelFiles);
             let hashParameters = builder.GetParameterList ();
-            return 'https://3dviewer.net/#' + hashParameters;
+            // FIXME: Update url to production link
+            return 'http://192.168.102.29:8080/website/#' + hashParameters;
         }
 
         let section = AddDiv (parentDiv, 'ov_dialog_section');
@@ -81,7 +82,8 @@ export function ShowSharingDialog (fileList, settings, viewer)
             embeddingCode += '<iframe';
             embeddingCode += ' width="640" height="480"';
             embeddingCode += ' style="border:1px solid #eeeeee;"';
-            embeddingCode += ' src="https://3dviewer.net/embed.html#' + hashParameters + '">';
+            // FIXME: Update url to production link
+            embeddingCode += ' src="http://192.168.102.29:8080/website/embed.html#' + hashParameters + '">';
             embeddingCode += '</iframe>';
             return embeddingCode;
         }

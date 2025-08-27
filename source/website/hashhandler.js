@@ -1,4 +1,4 @@
-import { CreateModelUrlParameters, CreateUrlParser } from '../engine/parameters/parameterlist.js';
+import { CreateModelUrlParameters, CreateUrlParser, CreateUrlBuilder } from '../engine/parameters/parameterlist.js';
 
 export class HashHandler
 {
@@ -82,6 +82,126 @@ export class HashHandler
     {
         let parser = CreateUrlParser (this.GetHash ());
         return parser.GetEdgeSettings ();
+    }
+
+    GetSelectedObjectsFromHash ()
+    {
+        let parser = CreateUrlParser (this.GetHash ());
+        return parser.GetSelectedObjects ();
+    }
+
+    GetOpacityFromHash ()
+    {
+        let parser = CreateUrlParser (this.GetHash ());
+        return parser.GetOpacity ();
+    }
+
+    SetSelectedObjectsToHash (selectedObjects)
+    {
+        let builder = CreateUrlBuilder ();
+        builder.AddModelUrls (this.GetModelFilesFromHash ());
+        
+        // Preserve existing parameters
+        let camera = this.GetCameraFromHash ();
+        if (camera !== null) {
+            builder.AddCamera (camera);
+        }
+        
+        let projectionMode = this.GetProjectionModeFromHash ();
+        if (projectionMode !== null) {
+            builder.AddProjectionMode (projectionMode);
+        }
+        
+        let backgroundColor = this.GetBackgroundFromHash ();
+        if (backgroundColor !== null) {
+            builder.AddBackgroundColor (backgroundColor);
+        }
+        
+        let environmentSettings = this.GetEnvironmentSettingsFromHash ();
+        if (environmentSettings !== null) {
+            builder.AddEnvironmentSettings (environmentSettings);
+        }
+        
+        let defaultColor = this.GetDefaultColorFromHash ();
+        if (defaultColor !== null) {
+            builder.AddDefaultColor (defaultColor);
+        }
+        
+        let defaultLineColor = this.GetDefaultLineColorFromHash ();
+        if (defaultLineColor !== null) {
+            builder.AddDefaultLineColor (defaultLineColor);
+        }
+        
+        let edgeSettings = this.GetEdgeSettingsFromHash ();
+        if (edgeSettings !== null) {
+            builder.AddEdgeSettings (edgeSettings);
+        }
+        
+        // Add new parameters
+        if (selectedObjects && selectedObjects.length > 0) {
+            builder.AddSelectedObjects (selectedObjects);
+        }
+        
+        let currentOpacity = this.GetOpacityFromHash ();
+        if (currentOpacity !== null) {
+            builder.AddOpacity (currentOpacity);
+        }
+        
+        this.SetHash (builder.GetParameterList ());
+    }
+
+    SetOpacityToHash (opacity)
+    {
+        let builder = CreateUrlBuilder ();
+        builder.AddModelUrls (this.GetModelFilesFromHash ());
+        
+        // Preserve existing parameters
+        let camera = this.GetCameraFromHash ();
+        if (camera !== null) {
+            builder.AddCamera (camera);
+        }
+        
+        let projectionMode = this.GetProjectionModeFromHash ();
+        if (projectionMode !== null) {
+            builder.AddProjectionMode (projectionMode);
+        }
+        
+        let backgroundColor = this.GetBackgroundFromHash ();
+        if (backgroundColor !== null) {
+            builder.AddBackgroundColor (backgroundColor);
+        }
+        
+        let environmentSettings = this.GetEnvironmentSettingsFromHash ();
+        if (environmentSettings !== null) {
+            builder.AddEnvironmentSettings (environmentSettings);
+        }
+        
+        let defaultColor = this.GetDefaultColorFromHash ();
+        if (defaultColor !== null) {
+            builder.AddDefaultColor (defaultColor);
+        }
+        
+        let defaultLineColor = this.GetDefaultLineColorFromHash ();
+        if (defaultLineColor !== null) {
+            builder.AddDefaultLineColor (defaultLineColor);
+        }
+        
+        let edgeSettings = this.GetEdgeSettingsFromHash ();
+        if (edgeSettings !== null) {
+            builder.AddEdgeSettings (edgeSettings);
+        }
+        
+        let selectedObjects = this.GetSelectedObjectsFromHash ();
+        if (selectedObjects && selectedObjects.length > 0) {
+            builder.AddSelectedObjects (selectedObjects);
+        }
+        
+        // Add new opacity
+        if (opacity !== null && opacity !== undefined) {
+            builder.AddOpacity (opacity);
+        }
+        
+        this.SetHash (builder.GetParameterList ());
     }
 
     GetHash ()

@@ -98,6 +98,9 @@ export function IsTwoManifold (object3D)
 
 export function GetDefaultMaterials (model)
 {
+    if (model === null || model === undefined || typeof model.MaterialCount !== 'function') {
+        return [];
+    }
     let defaultMaterials = [];
     for (let i = 0; i < model.MaterialCount (); i++) {
         let material = model.GetMaterial (i);
@@ -110,6 +113,9 @@ export function GetDefaultMaterials (model)
 
 export function ReplaceDefaultMaterialsColor (model, color, lineColor)
 {
+    if (model === null || model === undefined || typeof model.MaterialCount !== 'function') {
+        return;
+    }
     for (let i = 0; i < model.MaterialCount (); i++) {
         let material = model.GetMaterial (i);
         if (material.source === MaterialSource.DefaultFace) {

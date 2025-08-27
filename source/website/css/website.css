@@ -157,6 +157,24 @@ div.main_file_name
 	overflow: hidden;
 }
 
+/* Hide title elements when in iframe mode */
+body.iframe-mode div.title_left,
+body.iframe-mode div.main_file_name
+{
+	display: none;
+}
+
+/* Reduce header height in iframe mode for more space */
+body.iframe-mode div.header
+{
+	min-height: 40px;
+}
+
+body.iframe-mode div.title
+{
+	padding: 0px 10px;
+}
+
 div.main_left_container
 {
 	float: left;

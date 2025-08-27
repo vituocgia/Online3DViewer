@@ -222,6 +222,71 @@ export let ParameterConverter =
             this.StringToInteger (paramParts[4])
         );
         return edgeSettings;
+    },
+
+    SelectedObjectsToString : function (selectedObjects)
+    {
+        if (selectedObjects === null || selectedObjects.length === 0) {
+            return null;
+        }
+        // Encode each object name for URL safety
+        let encodedNames = selectedObjects.map(name => {
+            let encoded = encodeURIComponent(name);
+            // console.log(`Encoding: "${name}" -> "${encoded}"`);
+            return encoded;
+        });
+        return encodedNames.join (',');
+    },
+
+    StringToSelectedObjects : function (str)
+    {
+        if (str === null || str.length === 0) {
+            return null;
+        }
+        // console.log(`Decoding string: "${str}"`);
+
+        // Helper function to clean up malformed URL sequences
+        function cleanUrlEncoding(input) {
+            // Replace malformed % sequences with proper encoding
+            // %2 alone is invalid, should be %20 for space
+            return input.replace(/%2(?!\d)/g, '%20');
+        }
+
+        // Split by comma and decode each object name
+        let objectNames = str.split (',');
+        let decodedNames = objectNames.map(name => {
+            let trimmedName = name.trim();
+            let cleanedName = cleanUrlEncoding(trimmedName);
+            let decoded;
+            try {
+                decoded = decodeURIComponent(cleanedName);
+                // console.log(`Decoding: "${trimmedName}" (cleaned: "${cleanedName}") -> "${decoded}"`);
+            } catch (error) {
+                console.warn(`Decoding failed for "${trimmedName}": ${error.message}`);
+                console.warn(`Using original name: "${trimmedName}"`);
+                decoded = trimmedName;
+            }
+            return decoded;
+        });
+        return decodedNames;
+    },
+
+    OpacityToString : function (opacity)
+    {
+        if (opacity === null || opacity === undefined) {
+            return null;
+        }
+        return this.NumberToString (opacity);
+    },
+
+    StringToOpacity : function (str)
+    {
+        if (str === null || str.length === 0) {
+            return null;
+        }
+        let opacity = this.StringToNumber (str);
+        // Clamp opacity between 0.0 and 1.0
+        return Math.max (0.0, Math.min (1.0, opacity));
     }
 };
 
@@ -278,6 +343,18 @@ export class ParameterListBuilder
     AddEdgeSettings (edgeSettings)
     {
         this.AddUrlPart ('edgesettings', ParameterConverter.EdgeSettingsToString (edgeSettings));
+        return this;
+    }
+
+    AddSelectedObjects (selectedObjects)
+    {
+        this.AddUrlPart ('selected-objects', ParameterConverter.SelectedObjectsToString (selectedObjects));
+        return this;
+    }
+
+    AddOpacity (opacity)
+    {
+        this.AddUrlPart ('opacity', ParameterConverter.OpacityToString (opacity));
         return this;
     }
 
@@ -360,6 +437,18 @@ export class ParameterListParser
     {
         let edgeSettingsParams = this.GetKeywordParams ('edgesettings');
         return ParameterConverter.StringToEdgeSettings (edgeSettingsParams);
+    }
+
+    GetSelectedObjects ()
+    {
+        let selectedObjectsParams = this.GetKeywordParams ('selected-objects');
+        return ParameterConverter.StringToSelectedObjects (selectedObjectsParams);
+    }
+
+    GetOpacity ()
+    {
+        let opacityParams = this.GetKeywordParams ('opacity');
+        return ParameterConverter.StringToOpacity (opacityParams);
     }
 
     GetKeywordParams (keyword)

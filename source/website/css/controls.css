@@ -205,6 +205,9 @@ span.ov_slider_label
 	margin-left: 10px;
 	position: relative;
 	bottom: -4px;
+	white-space: nowrap;
+	min-width: 30px;
+	display: inline-block;
 }
 
 div.ov_toggle
