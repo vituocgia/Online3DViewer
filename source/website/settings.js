@@ -29,6 +29,7 @@ export class Settings
         this.edgeSettings = new EdgeSettings (false, new RGBColor (0, 0, 0), 1);
         this.highlightColor = new RGBAColor (100, 150, 255, 200); // Default blue highlight with transparency
         this.globalOpacity = 1.0; // Default full opacity
+
     }
 
     LoadFromCookies ()
@@ -44,6 +45,7 @@ export class Settings
         this.edgeSettings.edgeThreshold = CookieGetIntVal ('ov_edge_threshold', 1);
         this.highlightColor = CookieGetRGBAColorVal ('ov_highlight_color', new RGBAColor (100, 150, 255, 200));
         this.globalOpacity = CookieGetIntVal ('ov_global_opacity', 100) / 100.0; // Convert from percentage to 0-1 range
+
     }
 
     SaveToCookies ()
@@ -59,6 +61,7 @@ export class Settings
         CookieSetIntVal ('ov_edge_threshold', this.edgeSettings.edgeThreshold);
         CookieSetRGBAColorVal ('ov_highlight_color', this.highlightColor);
         CookieSetIntVal ('ov_global_opacity', Math.round (this.globalOpacity * 100)); // Convert to percentage for storage
+
     }
 }
 

@@ -1,6 +1,6 @@
 @font-face {
     font-family: "O3DVIcons";
-    src: url("O3DVIcons/O3DVIcons.woff?78c5bb161b5d47dce8e8428302ef6616") format("woff");
+    src: url("O3DVIcons/O3DVIcons.woff?8669cf6a3b5fd626ff0950083ffb7e76") format("woff");
 }
 
 i[class^="icon-"]:before, i[class*=" icon-"]:before {
@@ -86,81 +86,93 @@ i[class^="icon-"]:before, i[class*=" icon-"]:before {
 .icon-github:before {
     content: "\f118";
 }
-.icon-hidden:before {
+.icon-gizmo:before {
     content: "\f119";
 }
-.icon-info:before {
+.icon-hidden:before {
     content: "\f11a";
 }
-.icon-isolate:before {
+.icon-info:before {
     content: "\f11b";
 }
-.icon-light_mode:before {
+.icon-isolate:before {
     content: "\f11c";
 }
-.icon-materials:before {
+.icon-light_mode:before {
     content: "\f11d";
 }
-.icon-measure_angle:before {
+.icon-materials:before {
     content: "\f11e";
 }
-.icon-measure_distance_parallel:before {
+.icon-measure_angle:before {
     content: "\f11f";
 }
-.icon-measure_distance:before {
+.icon-measure_distance_parallel:before {
     content: "\f120";
 }
-.icon-measure:before {
+.icon-measure_distance:before {
     content: "\f121";
 }
-.icon-meshes:before {
+.icon-measure:before {
     content: "\f122";
 }
-.icon-missing_files:before {
+.icon-meshes:before {
     content: "\f123";
 }
-.icon-model:before {
+.icon-missing_files:before {
     content: "\f124";
 }
-.icon-open_url:before {
+.icon-model:before {
     content: "\f125";
 }
-.icon-open:before {
+.icon-open_url:before {
     content: "\f126";
 }
-.icon-print3d:before {
+.icon-open:before {
     content: "\f127";
 }
-.icon-search:before {
+.icon-print3d:before {
     content: "\f128";
 }
-.icon-settings:before {
+.icon-rotate:before {
     content: "\f129";
 }
-.icon-share:before {
+.icon-scale:before {
     content: "\f12a";
 }
-.icon-snapshot:before {
+.icon-search:before {
     content: "\f12b";
 }
-.icon-tree_mesh:before {
+.icon-settings:before {
     content: "\f12c";
 }
-.icon-tree_view:before {
+.icon-share:before {
     content: "\f12d";
 }
-.icon-twitter:before {
+.icon-snapshot:before {
     content: "\f12e";
 }
-.icon-up_y:before {
+.icon-translate:before {
     content: "\f12f";
 }
-.icon-up_z:before {
+.icon-tree_mesh:before {
     content: "\f130";
 }
-.icon-visible:before {
+.icon-tree_view:before {
     content: "\f131";
 }
-.icon-warning:before {
+.icon-twitter:before {
     content: "\f132";
+}
+.icon-up_y:before {
+    content: "\f133";
+}
+.icon-up_z:before {
+    content: "\f134";
+}
+.icon-visible:before {
+    content: "\f135";
+}
+.icon-warning:before {
+    content: "\f136";
 }

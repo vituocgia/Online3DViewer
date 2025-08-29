@@ -432,3 +432,194 @@ div.ov_bottom_floating_panel
 }
 
 }
+
+/* Cache Management Styles */
+.ov_dialog_section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid var(--ov_border_color);
+    border-radius: 6px;
+    background: var(--ov_background_color);
+}
+
+.ov_dialog_section_title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: var(--ov_foreground_color);
+    border-bottom: 1px solid var(--ov_border_color);
+    padding-bottom: 5px;
+}
+
+.ov_dialog_section_content {
+    color: var(--ov_foreground_color);
+}
+
+.ov_dialog_input_container {
+    margin-bottom: 15px;
+}
+
+.ov_dialog_input_label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--ov_foreground_color);
+}
+
+.ov_dialog_input_field {
+    width: 100%;
+}
+
+.ov_dialog_text_input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--ov_border_color);
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--ov_foreground_color);
+    background: var(--ov_dialog_background_color);
+    box-sizing: border-box;
+}
+
+.ov_dialog_text_input:focus {
+    outline: none;
+    border-color: var(--ov_button_color);
+    box-shadow: 0 0 0 2px rgba(51, 147, 189, 0.2);
+}
+
+.ov_dialog_files_list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--ov_border_color);
+    border-radius: 4px;
+    background: var(--ov_dialog_background_color);
+}
+
+.ov_dialog_file_item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--ov_border_color);
+    transition: background-color 0.2s ease;
+}
+
+.ov_dialog_file_item:last-child {
+    border-bottom: none;
+}
+
+.ov_dialog_file_item:hover {
+    background: var(--ov_hover_color);
+}
+
+.ov_dialog_file_info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ov_dialog_file_name {
+    font-weight: bold;
+    color: var(--ov_foreground_color);
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+
+.ov_dialog_file_details {
+    font-size: 12px;
+    color: var(--ov_light_icon_color);
+}
+
+.ov_dialog_file_remove {
+    background: none;
+    border: none;
+    color: var(--ov_light_icon_color);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+}
+
+.ov_dialog_file_remove:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+/* Loading Progress Styles */
+.ov_loading_progress_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ov_loading_progress_container {
+    background: var(--ov_dialog_background_color);
+    border: 1px solid var(--ov_border_color);
+    border-radius: 8px;
+    padding: 30px;
+    min-width: 400px;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.ov_loading_progress_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--ov_foreground_color);
+    margin-bottom: 20px;
+}
+
+.ov_loading_progress_bar_container {
+    background: var(--ov_border_color);
+    border-radius: 10px;
+    height: 20px;
+    margin: 20px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.ov_loading_progress_bar {
+    background: linear-gradient(90deg, var(--ov_button_color), #4CAF50);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.ov_loading_progress_text {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--ov_foreground_color);
+    margin-bottom: 10px;
+}
+
+.ov_loading_progress_status {
+    font-size: 14px;
+    color: var(--ov_light_icon_color);
+    margin-bottom: 20px;
+    min-height: 20px;
+}
+
+.ov_loading_progress_cancel {
+    background: var(--ov_button_color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.ov_loading_progress_cancel:hover {
+    background: var(--ov_button_hover_color);
+}

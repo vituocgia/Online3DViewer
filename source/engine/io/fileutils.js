@@ -49,11 +49,16 @@ export function GetFileExtension (filePath)
 	return extension.toLowerCase ();
 }
 
-export function RequestUrl (url, onProgress)
+export function RequestUrl (url, onProgress, bearerToken = null)
 {
 	return new Promise ((resolve, reject) => {
 		let request = new XMLHttpRequest ();
 		request.open ('GET', url, true);
+
+		// Add authorization header if bearer token is provided
+		if (bearerToken) {
+			request.setRequestHeader ('Authorization', 'Bearer ' + bearerToken);
+		}
 
 		request.onprogress = (event) => {
 			onProgress (event.loaded, event.total);
@@ -63,11 +68,14 @@ export function RequestUrl (url, onProgress)
 			if (request.status === 200) {
 				resolve (request.response);
 			} else {
+				console.error('Request failed with status:', request.status, 'for URL:', url);
+				console.error('Response headers:', request.getAllResponseHeaders());
 				reject ();
 			}
 		};
 
 		request.onerror = () => {
+			console.error('Request error for URL:', url);
 			reject ();
 		};
 

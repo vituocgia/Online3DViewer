@@ -11,21 +11,25 @@ export class InputFile
      * @param {FileSource} source Source of the file.
      * @param {string|File} data If the file source is url, this must be the url string. If the file source
      * is file, this must be a {@link File} object.
+     * @param {string} bearerToken Optional bearer token for authentication.
+     * @param {string} fileExtension Optional custom file extension.
      */
-    constructor (name, source, data)
+    constructor (name, source, data, bearerToken = null, fileExtension = null)
     {
         this.name = name;
         this.source = source;
         this.data = data;
+        this.bearerToken = bearerToken;
+        this.fileExtension = fileExtension;
     }
 }
 
-export function InputFilesFromUrls (urls)
+export function InputFilesFromUrls (urls, bearerToken = null, fileExtension = null)
 {
     let inputFiles = [];
     for (let url of urls) {
         let fileName = GetFileName (url);
-        inputFiles.push (new InputFile (fileName, FileSource.Url, url));
+        inputFiles.push (new InputFile (fileName, FileSource.Url, url, bearerToken, fileExtension));
     }
     return inputFiles;
 }
@@ -42,12 +46,13 @@ export function InputFilesFromFileObjects (fileObjects)
 
 export class ImporterFile
 {
-    constructor (name, source, data)
+    constructor (name, source, data, bearerToken = null, fileExtension = null)
     {
         this.name = GetFileName (name);
-        this.extension = GetFileExtension (name);
+        this.extension = fileExtension || GetFileExtension (name);
         this.source = source;
         this.data = data;
+        this.bearerToken = bearerToken;
         this.content = null;
     }
 
@@ -68,7 +73,7 @@ export class ImporterFileList
     {
         this.files = [];
         for (let inputFile of inputFiles) {
-            let file = new ImporterFile (inputFile.name, inputFile.source, inputFile.data);
+            let file = new ImporterFile (inputFile.name, inputFile.source, inputFile.data, inputFile.bearerToken, inputFile.fileExtension);
             this.files.push (file);
         }
     }
@@ -147,7 +152,7 @@ export class ImporterFileList
         }
         let loaderPromise = null;
         if (file.source === FileSource.Url) {
-            loaderPromise = RequestUrl (file.data, callbacks.onProgress);
+            loaderPromise = RequestUrl (file.data, callbacks.onProgress, file.bearerToken);
         } else if (file.source === FileSource.File) {
             loaderPromise = ReadFile (file.data, callbacks.onProgress);
         } else {

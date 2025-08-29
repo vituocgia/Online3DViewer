@@ -29,6 +29,12 @@ import { EnumeratePlugins, PluginType } from './pluginregistry.js';
 import { EnvironmentSettings } from '../engine/viewer/shadingmodel.js';
 import { IntersectionMode } from '../engine/viewer/viewermodel.js';
 import { Loc } from '../engine/core/localization.js';
+import { CacheManager } from './cachemanager.js';
+import { CacheManagementDialog } from './cachemanagementdialog.js';
+import { EnhancedModelLoader } from './enhancedmodelloader.js';
+import { LoadingProgress } from './loadingprogress.js';
+
+
 
 const WebsiteUIState =
 {
@@ -195,14 +201,32 @@ export class Website {
         this.layouter = new WebsiteLayouter(this.parameters, this.navigator, this.sidebar, this.viewer, this.measureTool);
         this.model = null;
         this.isCtrlPressed = false;
+        this.currentBearerToken = null;
+        this.cacheManager = new CacheManager();
+        this.cacheManagementDialog = new CacheManagementDialog(this.cacheManager);
+        this.enhancedModelLoader = new EnhancedModelLoader();
+        this.loadingProgress = new LoadingProgress();
+
+
 
         // Check if running in iframe and add iframe-mode class to body
         this.CheckIframeMode();
     }
 
-    Load() {
+    async Load() {
         this.settings.LoadFromCookies();
         this.cameraSettings.LoadFromCookies();
+
+        // Initialize cache manager
+        await this.cacheManager.init();
+
+        // Initialize enhanced model loader
+        await this.enhancedModelLoader.init();
+
+        // Set up progress callback
+        this.enhancedModelLoader.setProgressCallback((progress) => {
+            this.loadingProgress.updateProgress(progress);
+        });
 
         this.SwitchTheme(this.settings.themeId, false);
         HandleEvent('theme_on_load', this.settings.themeId === Theme.Light ? 'light' : 'dark');
@@ -233,17 +257,21 @@ export class Website {
         this.hashHandler.SetEventListener(this.OnHashChange.bind(this));
         this.OnHashChange();
 
+        // Make website instance available globally for cache management
+        window.website = this;
+
         // Listen for messages from parent window
         window.addEventListener('message', (event) => {
-            console.log('Received message from parent:', event.data);
+            // FIXME: this is a hack to get the selected objects from the parent window
+            // console.log('Received message from parent:', event.data);
 
             if (event.data.type === 'request_selection') {
                 this.SendSelectedObjectsToParent();
             } else if (event.data.type === 'set_preselected_objects') {
-                console.log('Received set_preselected_objects message:', event.data.selectedObjects);
+                // console.log('Received set_preselected_objects message:', event.data.selectedObjects);
                 this.SetPreselectedObjects(event.data.selectedObjects);
             } else if (event.data.type === 'check_iframe_ready') {
-                console.log('Received check_iframe_ready message, checking if model is ready...');
+                // console.log('Received check_iframe_ready message, checking if model is ready...');
                 // Check if the model is loaded and ready
                 this.CheckIframeReadyAndRespond();
             }
@@ -359,6 +387,12 @@ export class Website {
             this.UpdateMeshesOpacity();
         }
 
+        // Store bearer token from URL for use during model loading
+        let bearerToken = this.hashHandler.GetBearerTokenFromHash();
+        if (bearerToken !== null) {
+            this.currentBearerToken = bearerToken;
+        }
+
         // Apply selected objects from URL
         let selectedObjects = this.hashHandler.GetSelectedObjectsFromHash();
 
@@ -453,6 +487,8 @@ export class Website {
             this.measureTool.MouseMove(mouseCoordinates);
         }
     }
+
+
 
     OnModelContextMenu(globalMouseCoordinates, mouseCoordinates) {
         let meshUserData = this.viewer.GetMeshUserDataUnderMouse(IntersectionMode.MeshAndLine, mouseCoordinates);
@@ -784,19 +820,59 @@ export class Website {
         }
     }
 
-    LoadModelFromUrlList(urls, settings) {
-        let inputFiles = InputFilesFromUrls(urls);
+                    LoadModelFromUrlList(urls, settings) {
+        // Get bearer token from URL parameters or stored token
+        let bearerToken = this.hashHandler.GetBearerTokenFromHash() || this.currentBearerToken;
+
+        // Get file extension from URL parameters (default to 'glb')
+        let fileExtension = this.hashHandler.GetFileExtensionFromHash() || 'glb';
+
+        let inputFiles = InputFilesFromUrls(urls, bearerToken, fileExtension);
         this.LoadModelFromInputFiles(inputFiles, settings);
         this.ClearHashIfNotOnlyUrlList();
     }
 
     LoadModelFromFileList(files) {
+        // Check if any file is large (>50MB)
+        const hasLargeFile = files.some(file => file.size > 50 * 1024 * 1024);
+
+        if (hasLargeFile) {
+            // Use enhanced loading for large files
+            this.LoadLargeModelFromFileList(files);
+        } else {
+            // Use regular loading for smaller files
+            let importSettings = new ImportSettings();
+            importSettings.defaultLineColor = this.settings.defaultLineColor;
+            importSettings.defaultColor = this.settings.defaultColor;
+            let inputFiles = InputFilesFromFileObjects(files);
+            this.LoadModelFromInputFiles(inputFiles, importSettings);
+            this.ClearHashIfNotOnlyUrlList();
+        }
+    }
+
+    LoadLargeModelFromFileList(files) {
+        console.log('LoadLargeModelFromFileList called with files:', files.length);
+
+        // Show loading progress
+        this.loadingProgress.show();
+
+        // Show file info
+        const mainFile = files[0];
+        this.loadingProgress.showFileInfo(mainFile.name, mainFile.size);
+
         let importSettings = new ImportSettings();
         importSettings.defaultLineColor = this.settings.defaultLineColor;
         importSettings.defaultColor = this.settings.defaultColor;
-        let inputFiles = InputFilesFromFileObjects(files);
-        this.LoadModelFromInputFiles(inputFiles, importSettings);
-        this.ClearHashIfNotOnlyUrlList();
+
+        // Use enhanced model loader
+        this.enhancedModelLoader.loadModelWithCache(files, importSettings, {
+            onFinish: (inputFiles, settings) => {
+                console.log('Enhanced model loader finished, loading model...');
+                this.LoadModelFromInputFiles(inputFiles, settings);
+                this.ClearHashIfNotOnlyUrlList();
+                this.loadingProgress.hide();
+            }
+        });
     }
 
     LoadModelFromInputFiles(files, settings) {
@@ -899,6 +975,9 @@ export class Website {
         this.viewer.SetNavigationMode(this.cameraSettings.navigationMode);
         this.viewer.SetProjectionMode(this.cameraSettings.projectionMode);
         this.UpdateEnvironmentMap();
+
+
+
     }
 
     InitToolbar() {
@@ -1034,6 +1113,15 @@ export class Website {
         });
         AddButton(this.toolbar, 'share', 'Send Selection to Parent', ['only_full_width', 'only_on_model'], () => {
             this.SendSelectedObjectsToParent();
+        });
+        AddButton(this.toolbar, 'settings', Loc('Cache Management'), ['only_full_width'], () => {
+            console.log('Cache Management button clicked');
+            try {
+                this.cacheManagementDialog.Show();
+            } catch (error) {
+                console.error('Error showing cache management dialog:', error);
+                alert('Failed to show cache management dialog: ' + error.message);
+            }
         });
 
 

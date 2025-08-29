@@ -172,6 +172,7 @@ export class Viewer
         this.shadingModel = null;
         this.navigation = null;
         this.upVector = null;
+
         this.settings = {
             animationSteps : 40
         };
@@ -204,6 +205,7 @@ export class Viewer
 
         this.InitNavigation ();
         this.InitShading ();
+
 
         this.Render ();
     }
@@ -417,7 +419,12 @@ export class Viewer
         }
 
         this.shadingModel.UpdateByCamera (navigationCamera);
+
+
+
         this.renderer.render (this.scene, this.camera);
+
+
     }
 
     SetMainObject (object)
@@ -607,6 +614,15 @@ export class Viewer
         });
     }
 
+    Traverse (enumerator)
+    {
+        if (this.mainModel && this.mainModel.rootObject) {
+            this.mainModel.rootObject.traverse ((obj) => {
+                enumerator (obj);
+            });
+        }
+    }
+
     InitNavigation ()
     {
         let camera = GetDefaultCamera (Direction.Y);
@@ -629,6 +645,8 @@ export class Viewer
     {
         this.shadingModel = new ShadingModel (this.scene);
     }
+
+
 
     GetShadingType ()
     {
@@ -680,8 +698,11 @@ export class Viewer
         return url;
     }
 
+
+
     Destroy ()
     {
+
         this.Clear ();
         this.renderer.dispose ();
     }

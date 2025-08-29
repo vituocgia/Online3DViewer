@@ -12,6 +12,71 @@ div.ov_modal_overlay
 	position: absolute;
 }
 
+div.ov_dialog_overlay
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+div.ov_dialog_header
+{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 15px;
+	border-bottom: 1px solid var(--ov_border_color);
+	margin-bottom: 20px;
+}
+
+div.ov_dialog_close_button
+{
+	background: none;
+	border: none;
+	font-size: 24px;
+	cursor: pointer;
+	color: var(--ov_foreground_color);
+	padding: 5px;
+	border-radius: 3px;
+	transition: background-color 0.2s ease;
+}
+
+div.ov_dialog_close_button:hover
+{
+	background: var(--ov_hover_color);
+}
+
+div.ov_dialog_body
+{
+	flex: 1;
+	overflow-y: auto;
+}
+
+div.ov_button
+{
+	background: var(--ov_button_color);
+	color: white;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background-color 0.2s ease;
+	margin: 5px;
+}
+
+div.ov_button:hover
+{
+	background: var(--ov_button_hover_color);
+}
+
 div.ov_dialog
 {
 	color: var(--ov_dialog_foreground_color);

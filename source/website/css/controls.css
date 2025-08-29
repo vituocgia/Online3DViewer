@@ -79,6 +79,32 @@ div.ov_tooltip
 	box-shadow: var(--ov_shadow);
 }
 
+div.ov_toolbar_button_group
+{
+	display: inline-flex;
+	border: 1px solid var(--ov_border_color);
+	border-radius: 5px;
+	overflow: hidden;
+}
+
+div.ov_toolbar_button_group .ov_toolbar_button
+{
+	border: none;
+	border-radius: 0;
+	border-right: 1px solid var(--ov_border_color);
+}
+
+div.ov_toolbar_button_group .ov_toolbar_button:last-child
+{
+	border-right: none;
+}
+
+div.ov_toolbar_button_group .ov_toolbar_button.selected
+{
+	background: var(--ov_selected_button_color);
+	color: var(--ov_selected_button_text_color);
+}
+
 input[type=text]
 {
 	color: var(--ov_dialog_foreground_color);

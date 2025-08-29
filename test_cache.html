@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cache Management Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>3D Viewer Cache Management Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Cache Management Dialog</h3>
+        <button onclick="testCacheDialog()">Open Cache Management Dialog</button>
+        <button onclick="testLocalFileCache()">Test Local File Cache</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Console Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        // Override console.log to capture output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logDiv = document.getElementById('log');
+        
+        function addToLog(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog(args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog(args.join(' '), 'error');
+        };
+        
+        function clearLog() {
+            logDiv.innerHTML = '';
+        }
+        
+        function testCacheDialog() {
+            console.log('Testing cache management dialog...');
+            try {
+                if (window.website && window.website.cacheManagementDialog) {
+                    console.log('Cache management dialog found, opening...');
+                    window.website.cacheManagementDialog.Show();
+                } else {
+                    console.error('Cache management dialog not found!');
+                    console.log('window.website:', !!window.website);
+                    if (window.website) {
+                        console.log('window.website.cacheManagementDialog:', !!window.website.cacheManagementDialog);
+                    }
+                }
+            } catch (error) {
+                console.error('Error testing cache dialog:', error);
+            }
+        }
+        
+        function testLocalFileCache() {
+            console.log('Testing local file cache...');
+            try {
+                if (window.website && window.website.enhancedModelLoader) {
+                    console.log('Enhanced model loader found, testing cache...');
+                    window.website.enhancedModelLoader.getCacheStatus().then(status => {
+                        console.log('Local cache status:', status);
+                    }).catch(error => {
+                        console.error('Error getting cache status:', error);
+                    });
+                } else {
+                    console.error('Enhanced model loader not found!');
+                }
+            } catch (error) {
+                console.error('Error testing local file cache:', error);
+            }
+        }
+        
+        // Wait for page to load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, checking for 3D viewer...');
+            setTimeout(() => {
+                if (window.website) {
+                    console.log('3D viewer website found!');
+                    console.log('Cache manager:', !!window.website.cacheManager);
+                    console.log('Enhanced model loader:', !!window.website.enhancedModelLoader);
+                    console.log('Cache management dialog:', !!window.website.cacheManagementDialog);
+                } else {
+                    console.error('3D viewer website not found!');
+                }
+            }, 2000);
+        });
+    </script>
+    
+    <!-- Include the 3D viewer -->
+    <script src="build/website_dev/o3dv.website.min.js"></script>
+    <script>
+        // Initialize the 3D viewer
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.OV && window.OV.Website) {
+                    console.log('Initializing 3D viewer...');
+                    // Create a simple container for the viewer
+                    const container = document.createElement('div');
+                    container.style.width = '800px';
+                    container.style.height = '600px';
+                    container.style.border = '1px solid #ccc';
+                    document.body.appendChild(container);
+                    
+                    // Initialize the website
+                    const website = new window.OV.Website({
+                        headerDiv: container,
+                        toolbarDiv: container,
+                        navigatorDiv: container,
+                        sidebarDiv: container,
+                        viewerDiv: container,
+                        introDiv: container,
+                        mainDiv: container,
+                        introContentDiv: container,
+                        fileNameDiv: container,
+                        leftContainerDiv: container,
+                        rightContainerDiv: container,
+                        navigatorSplitterDiv: container,
+                        sidebarSplitterDiv: container,
+                        fileInput: document.createElement('input')
+                    });
+                    
+                    website.Load().then(() => {
+                        console.log('3D viewer loaded successfully!');
+                        window.website = website;
+                    }).catch(error => {
+                        console.error('Error loading 3D viewer:', error);
+                    });
+                } else {
+                    console.error('OV.Website not found!');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

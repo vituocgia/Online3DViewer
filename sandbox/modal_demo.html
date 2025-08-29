@@ -87,9 +87,141 @@
             border-radius: 8px;
             width: 90%;
             height: 90%;
+            min-width: 400px;
+            min-height: 300px;
+            max-width: 95%;
+            max-height: 95%;
             position: relative;
             display: flex;
             flex-direction: column;
+            resize: both;
+            overflow: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid #007bff;
+        }
+
+        /* Resize handle styles */
+        .resize-handle {
+            position: absolute;
+            background: transparent;
+            z-index: 1001;
+        }
+
+        .resize-handle.n {
+            top: 0;
+            left: 10px;
+            right: 10px;
+            height: 10px;
+            cursor: n-resize;
+        }
+
+        .resize-handle.s {
+            bottom: 0;
+            left: 10px;
+            right: 10px;
+            height: 10px;
+            cursor: s-resize;
+        }
+
+        .resize-handle.e {
+            top: 10px;
+            right: 0;
+            bottom: 10px;
+            width: 10px;
+            cursor: e-resize;
+        }
+
+        .resize-handle.w {
+            top: 10px;
+            left: 0;
+            bottom: 10px;
+            width: 10px;
+            cursor: w-resize;
+        }
+
+        .resize-handle.ne {
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            cursor: ne-resize;
+        }
+
+        .resize-handle.nw {
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            cursor: nw-resize;
+        }
+
+        .resize-handle.se {
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            cursor: se-resize;
+        }
+
+        .resize-handle.sw {
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            cursor: sw-resize;
+        }
+
+        /* Visual indicator for resize handles */
+        .resize-handle:hover::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 123, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .resize-handle.n:hover::after,
+        .resize-handle.s:hover::after {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 4px;
+        }
+
+        .resize-handle.e:hover::after,
+        .resize-handle.w:hover::after {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 30px;
+        }
+
+        .resize-handle.ne:hover::after,
+        .resize-handle.nw:hover::after,
+        .resize-handle.se:hover::after,
+        .resize-handle.sw:hover::after {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Visual feedback during resize */
+        .modal-content.resizing {
+            transition: none;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+        }
+
+        .modal-content.resizing .resize-handle {
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        /* Prevent iframe interaction during resize */
+        .modal-content.resizing .viewer-iframe {
+            pointer-events: none;
         }
 
         .modal-header {
@@ -107,22 +239,26 @@
         }
 
         .close {
-            color: #aaa;
-            font-size: 28px;
+            color: #666;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            width: 30px;
-            height: 30px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 10px;
+            width: auto;
+            height: auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
         }
 
         .close:hover {
-            color: #000;
+            color: #fff;
+            background: #dc3545;
+            border-color: #dc3545;
         }
 
         .modal-body {
@@ -185,7 +321,9 @@
         <p>This demo shows how to open the 3D viewer in a modal with preselected objects and receive selections back.
         </p>
         <p><strong>Features:</strong> URL encoding for special characters, postMessage for large object arrays (avoids
-            HTTP 431 errors), and real-time selection updates.</p>
+            HTTP 431 errors), real-time selection updates, and <strong>resizable modal</strong>.</p>
+        <p><strong>Modal Resize:</strong> Drag the edges or corners of the modal to resize it. Use the "Reset Size" button to restore the default size and position.</p>
+        <p><strong>Modal Control:</strong> Use the "Close" button in the top-right corner or press Escape key to close the modal. Clicking outside the modal will NOT close it.</p>
 
         <div class="demo-section">
             <h3>Preselection Setup</h3>
@@ -246,10 +384,20 @@
 
     <!-- Modal -->
     <div id="viewerModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" id="modalContent">
+            <!-- Resize handles -->
+            <div class="resize-handle n" data-direction="n"></div>
+            <div class="resize-handle s" data-direction="s"></div>
+            <div class="resize-handle e" data-direction="e"></div>
+            <div class="resize-handle w" data-direction="w"></div>
+            <div class="resize-handle ne" data-direction="ne"></div>
+            <div class="resize-handle nw" data-direction="nw"></div>
+            <div class="resize-handle se" data-direction="se"></div>
+            <div class="resize-handle sw" data-direction="sw"></div>
+
             <div class="modal-header">
                 <div class="modal-title">3D Viewer</div>
-                <button class="close" onclick="closeViewerModal()">&times;</button>
+                <button class="close" onclick="closeViewerModal()" title="Close modal">Close</button>
             </div>
             <div class="modal-body">
                 <div class="viewer-container">
@@ -260,6 +408,7 @@
                 <div class="status" id="modalStatus">Ready</div>
                 <div>
                     <button class="button" onclick="requestSelection()">Get Current Selection</button>
+                    <button class="button secondary" onclick="resetModalSize()" title="Reset modal size and position">Reset Size</button>
                     <button class="button secondary" onclick="closeViewerModal()">Close</button>
                 </div>
             </div>
@@ -269,6 +418,11 @@
     <script>
         let currentSelection = [];
         let selectionHistory = [];
+
+        // Resize functionality variables
+        let isResizing = false;
+        let currentHandle = null;
+        let startX, startY, startWidth, startHeight, startLeft, startTop;
 
         // Open the 3D viewer modal
         function openViewerModal() {
@@ -307,6 +461,9 @@
 
             // Show modal
             modal.style.display = 'block';
+
+            // Initialize resize handles
+            initializeResizeHandles();
 
             // Listen for messages from iframe
             window.addEventListener('message', handleIframeMessage);
@@ -423,13 +580,13 @@
             status.textContent = message;
         }
 
-        // Close modal when clicking outside
-        window.onclick = function (event) {
-            const modal = document.getElementById('viewerModal');
-            if (event.target === modal) {
-                closeViewerModal();
-            }
-        }
+        // Close modal when clicking outside (disabled - only close button and Escape key work)
+        // window.onclick = function (event) {
+        //     const modal = document.getElementById('viewerModal');
+        //     if (event.target === modal) {
+        //         closeViewerModal();
+        //     }
+        // }
 
         // Close modal with Escape key
         document.addEventListener('keydown', function (event) {
@@ -479,6 +636,140 @@
             const preselectionInput = document.getElementById('preselectionInput');
             preselectionInput.value = currentSelection.join(', ');
             updateModalStatus(`Replaced preselection with ${currentSelection.length} objects`);
+        }
+
+        // Initialize resize functionality
+        function initializeResizeHandles() {
+            const handles = document.querySelectorAll('.resize-handle');
+
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+            });
+
+            // Add global mouse event listeners
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        // Start resize operation
+        function startResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            isResizing = true;
+            currentHandle = e.target.dataset.direction;
+
+            const modalContent = document.getElementById('modalContent');
+            const rect = modalContent.getBoundingClientRect();
+
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = rect.width;
+            startHeight = rect.height;
+            startLeft = rect.left;
+            startTop = rect.top;
+
+            // Add resizing class for visual feedback
+            modalContent.classList.add('resizing');
+
+            // Prevent text selection during resize
+            document.body.style.userSelect = 'none';
+        }
+
+        // Handle resize operation
+        function handleResize(e) {
+            if (!isResizing) return;
+
+            e.preventDefault();
+
+            const modalContent = document.getElementById('modalContent');
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            let newWidth = startWidth;
+            let newHeight = startHeight;
+            let newLeft = startLeft;
+            let newTop = startTop;
+
+            // Calculate new dimensions based on resize direction
+            switch (currentHandle) {
+                case 'n':
+                    newHeight = Math.max(300, startHeight - deltaY);
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+                case 's':
+                    newHeight = Math.max(300, startHeight + deltaY);
+                    break;
+                case 'e':
+                    newWidth = Math.max(400, startWidth + deltaX);
+                    break;
+                case 'w':
+                    newWidth = Math.max(400, startWidth - deltaX);
+                    newLeft = startLeft + (startWidth - newWidth);
+                    break;
+                case 'ne':
+                    newWidth = Math.max(400, startWidth + deltaX);
+                    newHeight = Math.max(300, startHeight - deltaY);
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+                case 'nw':
+                    newWidth = Math.max(400, startWidth - deltaX);
+                    newHeight = Math.max(300, startHeight - deltaY);
+                    newLeft = startLeft + (startWidth - newWidth);
+                    newTop = startTop + (startHeight - newHeight);
+                    break;
+                case 'se':
+                    newWidth = Math.max(400, startWidth + deltaX);
+                    newHeight = Math.max(300, startHeight + deltaY);
+                    break;
+                case 'sw':
+                    newWidth = Math.max(400, startWidth - deltaX);
+                    newHeight = Math.max(300, startHeight + deltaY);
+                    newLeft = startLeft + (startWidth - newWidth);
+                    break;
+            }
+
+            // Apply constraints
+            const maxWidth = window.innerWidth * 0.95;
+            const maxHeight = window.innerHeight * 0.95;
+
+            newWidth = Math.min(newWidth, maxWidth);
+            newHeight = Math.min(newHeight, maxHeight);
+
+            // Apply new dimensions
+            modalContent.style.width = newWidth + 'px';
+            modalContent.style.height = newHeight + 'px';
+
+            // Update position for handles that affect position
+            if (['n', 'w', 'ne', 'nw', 'sw'].includes(currentHandle)) {
+                modalContent.style.left = newLeft + 'px';
+                modalContent.style.top = newTop + 'px';
+                modalContent.style.margin = '0';
+            }
+        }
+
+        // Stop resize operation
+        function stopResize() {
+            if (!isResizing) return;
+
+            isResizing = false;
+            currentHandle = null;
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.classList.remove('resizing');
+
+            // Restore text selection
+            document.body.style.userSelect = '';
+        }
+
+        // Reset modal position and size
+        function resetModalSize() {
+            const modalContent = document.getElementById('modalContent');
+            modalContent.style.width = '90%';
+            modalContent.style.height = '90%';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.margin = '2% auto';
         }
     </script>
 </body>

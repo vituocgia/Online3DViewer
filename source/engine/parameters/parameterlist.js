@@ -31,7 +31,11 @@ export let ParameterConverter =
         if (urls === null) {
             return null;
         }
-        return urls.join (',');
+        // Encode each URL for URL safety
+        let encodedUrls = urls.map(url => {
+            return encodeURIComponent(url);
+        });
+        return encodedUrls.join (',');
     },
 
     StringToModelUrls : function (str)
@@ -39,7 +43,17 @@ export let ParameterConverter =
         if (str === null || str.length === 0) {
             return null;
         }
-        return str.split (',');
+        // Split by comma and decode each URL
+        let urlParts = str.split (',');
+        let decodedUrls = urlParts.map(urlPart => {
+            try {
+                return decodeURIComponent(urlPart);
+            } catch (error) {
+                console.warn(`URL decoding failed for "${urlPart}": ${error.message}`);
+                return urlPart; // Return original if decoding fails
+            }
+        });
+        return decodedUrls;
     },
 
     CameraToString : function (camera)
@@ -287,6 +301,38 @@ export let ParameterConverter =
         let opacity = this.StringToNumber (str);
         // Clamp opacity between 0.0 and 1.0
         return Math.max (0.0, Math.min (1.0, opacity));
+    },
+
+    BearerTokenToString : function (bearerToken)
+    {
+        if (bearerToken === null || bearerToken === undefined || bearerToken.length === 0) {
+            return null;
+        }
+        return encodeURIComponent (bearerToken);
+    },
+
+    StringToBearerToken : function (str)
+    {
+        if (str === null || str.length === 0) {
+            return null;
+        }
+        return decodeURIComponent (str);
+    },
+
+    FileExtensionToString : function (fileExtension)
+    {
+        if (fileExtension === null || fileExtension === undefined || fileExtension.length === 0) {
+            return null;
+        }
+        return encodeURIComponent (fileExtension);
+    },
+
+    StringToFileExtension : function (str)
+    {
+        if (str === null || str.length === 0) {
+            return null;
+        }
+        return decodeURIComponent (str);
     }
 };
 
@@ -355,6 +401,18 @@ export class ParameterListBuilder
     AddOpacity (opacity)
     {
         this.AddUrlPart ('opacity', ParameterConverter.OpacityToString (opacity));
+        return this;
+    }
+
+    AddBearerToken (bearerToken)
+    {
+        this.AddUrlPart ('bearer-token', ParameterConverter.BearerTokenToString (bearerToken));
+        return this;
+    }
+
+    AddFileExtension (fileExtension)
+    {
+        this.AddUrlPart ('file-ext', ParameterConverter.FileExtensionToString (fileExtension));
         return this;
     }
 
@@ -449,6 +507,18 @@ export class ParameterListParser
     {
         let opacityParams = this.GetKeywordParams ('opacity');
         return ParameterConverter.StringToOpacity (opacityParams);
+    }
+
+    GetBearerToken ()
+    {
+        let bearerTokenParams = this.GetKeywordParams ('bearer-token');
+        return ParameterConverter.StringToBearerToken (bearerTokenParams);
+    }
+
+    GetFileExtension ()
+    {
+        let fileExtensionParams = this.GetKeywordParams ('file-ext');
+        return ParameterConverter.StringToFileExtension (fileExtensionParams);
     }
 
     GetKeywordParams (keyword)
