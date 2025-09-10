@@ -52,7 +52,7 @@ class WebsiteLayouter {
         this.viewer = viewer;
         this.measureTool = measureTool;
         this.limits = {
-            minPanelWidth: 290,
+            minPanelWidth: 300,
             minCanvasWidth: 100
         };
     }
@@ -707,15 +707,18 @@ export class Website {
     SetPreselectedObjects(selectedObjectNames) {
         console.log('SetPreselectedObjects called with:', selectedObjectNames);
 
-        if (!selectedObjectNames || selectedObjectNames.length === 0) {
-            console.log('No objects to preselect');
-            return;
-        }
-
         if (!this.model) {
             console.log('Model not loaded yet, storing preselected objects for later');
             // Store for later when model loads
             this.pendingPreselectedObjects = selectedObjectNames;
+            return;
+        }
+
+        // If no objects to preselect, clear current selection
+        if (!selectedObjectNames || selectedObjectNames.length === 0) {
+            console.log('No objects to preselect, clearing current selection');
+            this.navigator.SetMultipleSelections([]);
+            this.UpdateMeshesSelection();
             return;
         }
 

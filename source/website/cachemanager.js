@@ -34,7 +34,7 @@ export class CacheManager {
 
         if (this.isServiceWorkerSupported) {
             try {
-                const registration = await navigator.serviceWorker.register('/service-worker.js');
+                const registration = await navigator.serviceWorker.register('/tools/lib/service-worker.js');
                 console.log('Service Worker registered:', registration);
                 return true;
             } catch (error) {
